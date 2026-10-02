@@ -284,7 +284,13 @@
       <p class="sobretitulo">Lo que dicen</p>
       <h2>Mensajes que nos alegran el día</h2>
     </div>
-    <div class="testimonios" id="testimoniosGrid"></div>
+    <div class="ruleta" id="ruleta" aria-roledescription="carrusel" aria-label="Mensajes y momentos de clientes">
+      <div class="ruleta__pista" id="ruletaPista" tabindex="0"></div>
+      <button class="ruleta__flecha ruleta__flecha--izq" data-ruleta="-1" aria-label="Anterior">‹</button>
+      <button class="ruleta__flecha ruleta__flecha--der" data-ruleta="1" aria-label="Siguiente">›</button>
+    </div>
+    <div class="ruleta__puntos" id="ruletaPuntos"></div>
+    <p class="ruleta__cta">¿Tu peludo también celebró con MestiCha? <a id="ruletaIG" target="_blank" rel="noopener">Etiquétanos en Instagram 📸</a></p>
   </div>
 </section>
 

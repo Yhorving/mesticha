@@ -158,15 +158,79 @@
   $("#galeriaGrid").innerHTML = GALERIA.map(g => `
     <figure><img src="${g.img}" alt="${esc(g.texto)}" loading="lazy"><figcaption>${esc(g.texto)}</figcaption></figure>`).join("");
 
-  $("#testimoniosGrid").innerHTML = TESTIMONIOS.map(t => `
-    <article class="testimonio${t.img ? "" : " testimonio--destacado"}">
-      ${t.img ? `<div class="testimonio__foto"><img src="${t.img}" alt="" loading="lazy"></div>` : ""}
+  // ---------- "Mensajes que nos alegran el día": ruleta de mensajes reales + momentos ----------
+  // Se intercalan: un mensaje, dos momentos, un mensaje…
+  const tarjetasRuleta = [];
+  { let m = 0;
+    TESTIMONIOS.forEach(t => { tarjetasRuleta.push({ tipo: "mensaje", ...t }); MOMENTOS.slice(m, m + 2).forEach(x => tarjetasRuleta.push({ tipo: "momento", ...x })); m += 2; });
+    MOMENTOS.slice(m).forEach(x => tarjetasRuleta.push({ tipo: "momento", ...x })); }
+
+  const pista = $("#ruletaPista");
+  pista.innerHTML = tarjetasRuleta.map((t, i) => t.tipo === "mensaje" ? `
+    <article class="ruleta__tarjeta testimonio" aria-label="Mensaje ${i + 1} de ${tarjetasRuleta.length}">
+      <div class="testimonio__foto"><img src="${esc(t.img)}" alt="" loading="lazy"></div>
       <div class="testimonio__cuerpo">
         <blockquote>${esc(t.texto)}</blockquote>
         <div class="testimonio__autor">${esc(t.autor)}</div>
         <div class="testimonio__detalle">${esc(t.detalle)}</div>
       </div>
-    </article>`).join("");
+    </article>` : `
+    <figure class="ruleta__tarjeta momento" aria-label="Foto ${i + 1} de ${tarjetasRuleta.length}">
+      <img src="${esc(t.img)}" alt="${esc(t.texto)}" loading="lazy" style="object-position:${esc(t.pos || "50% 50%")}">
+      <figcaption><small>📸 Momento MestiCha</small>${esc(t.texto)}</figcaption>
+    </figure>`).join("");
+  $("#ruletaIG").href = CONFIG.instagram;
+
+  const paso = () => { const c = pista.children; return c.length > 1 ? c[1].offsetLeft - c[0].offsetLeft : pista.clientWidth; };
+  const visibles = () => Math.max(1, Math.round(pista.clientWidth / paso()));
+  const ultimaPos = () => Math.max(0, pista.children.length - visibles());
+  // objetivo: a dónde va mientras se mueve (para que varios toques seguidos avancen varias)
+  let objetivo = null, finScroll;
+  const posActual = () => objetivo ?? Math.round(pista.scrollLeft / paso());
+  function irRuleta(i) {
+    const max = ultimaPos();
+    if (i > max) i = 0; else if (i < 0) i = max; // da la vuelta
+    objetivo = i;
+    $$("#ruletaPuntos button").forEach((b, k) => b.classList.toggle("activo", k === i));
+    pista.scrollTo({ left: i * paso(), behavior: "smooth" });
+  }
+  function pintarPuntos() {
+    const n = ultimaPos() + 1, act = Math.min(posActual(), n - 1);
+    $("#ruletaPuntos").innerHTML = Array.from({ length: n }, (_, k) =>
+      `<button data-punto="${k}" class="${k === act ? "activo" : ""}" aria-label="Ir a ${k + 1}"></button>`).join("");
+  }
+  let rafRuleta;
+  pista.addEventListener("scroll", () => {
+    clearTimeout(finScroll);
+    finScroll = setTimeout(() => { objetivo = null; }, 160);
+    cancelAnimationFrame(rafRuleta);
+    rafRuleta = requestAnimationFrame(() => $$("#ruletaPuntos button").forEach((b, k) => b.classList.toggle("activo", k === posActual())));
+  });
+  $("#ruleta").addEventListener("click", e => { const f = e.target.closest("[data-ruleta]"); if (f) { irRuleta(posActual() + +f.dataset.ruleta); pausarRuleta(8000); } });
+  $("#ruletaPuntos").addEventListener("click", e => { const b = e.target.closest("[data-punto]"); if (b) { irRuleta(+b.dataset.punto); pausarRuleta(8000); } });
+  pista.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight") { e.preventDefault(); irRuleta(posActual() + 1); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); irRuleta(posActual() - 1); }
+  });
+  addEventListener("resize", () => { clearTimeout(rafRuleta); rafRuleta = setTimeout(pintarPuntos, 150); });
+  pintarPuntos();
+
+  // Avanza sola; se pausa al pasar el mouse, tocarla o enfocarla
+  let pausaHasta = 0, encima = false;
+  const pausarRuleta = ms => { pausaHasta = Date.now() + ms; };
+  $("#ruleta").addEventListener("mouseenter", () => { encima = true; });
+  $("#ruleta").addEventListener("mouseleave", () => { encima = false; });
+  pista.addEventListener("touchstart", () => pausarRuleta(10000), { passive: true });
+  pista.addEventListener("focusin", () => pausarRuleta(10000));
+  let ruletaVisible = false;
+  if ("IntersectionObserver" in window) new IntersectionObserver(es => { ruletaVisible = es[0].isIntersecting; }).observe(pista);
+  else ruletaVisible = true;
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    setInterval(() => {
+      if (document.hidden || encima || !ruletaVisible || Date.now() < pausaHasta) return;
+      irRuleta(posActual() + 1);
+    }, 4000);
+  }
 
   // ---------- Personalizador ----------
   const TORTA = () => PRODUCTOS.find(p => p.personalizable && p.activo !== false);

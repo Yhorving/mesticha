@@ -116,7 +116,7 @@ const TESTIMONIOS = [
     texto: "Mi perrito tiene 11 años y nunca me ha comido snack ni galletas, ¡ni churu come! Pero las galletas se las devoró 😂❤️ Le encantaron.",
     autor: "Katherine",
     detalle: "Galletas · por Instagram",
-    img: null,
+    img: "img/galletas-lote.jpg", // sólo producto, sin mascota: no sabemos cuál es su perrito
   },
   {
     texto: "Desde hoy fan número 1 de las galletas de @mesticha.cl 💖",
@@ -130,6 +130,21 @@ const TESTIMONIOS = [
     detalle: "Torta personalizada · historia de Instagram",
     img: "img/story-louie.jpg",
   },
+  // Para agregar más: copia un bloque de arriba con el texto REAL del mensaje.
+];
+
+// "Momentos": fotos reales de clientes con sus productos. Se mezclan con los
+// mensajes en la ruleta de "Mensajes que nos alegran el día".
+const MOMENTOS = [
+  { img: "img/nicky-comiendo.jpg",  texto: "Nicky celebró sus 12 con torta 🎂", pos: "50% 55%" },
+  { img: "img/cumple-perritas.jpg", texto: "Cumpleaños con vela, donas y galleta huella", pos: "45% 60%" },
+  { img: "img/gato-comiendo.jpg",   texto: "Ni una miga sobró 😺", pos: "50% 50%" },
+  { img: "img/perro-galleta-1.jpg", texto: "¿Me das otra? 🥺", pos: "50% 45%" },
+  { img: "img/gato-torta.jpg",      texto: "Los michis también celebran", pos: "50% 70%" },
+  { img: "img/yorkie-pack.jpg",     texto: "Recién llegó su pack de galletas", pos: "50% 50%" },
+  { img: "img/cumple-beagle.jpg",   texto: "¿Quién sopla la vela?", pos: "50% 55%" },
+  { img: "img/gato-galleta.jpg",    texto: "Galleta aprobada ✅", pos: "50% 45%" },
+  { img: "img/perro-pack.jpg",      texto: "El pedido llegó y la cola no para", pos: "50% 45%" },
 ];
 
 // Opciones de "Arma su torta". CONFIRMAR precios.
