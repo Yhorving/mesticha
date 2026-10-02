@@ -28,7 +28,7 @@ Instagram, despacho y datos de transferencia también se editan desde el panel �
 - [ ] **Precios** de cada producto. Los actuales son de ejemplo. Repetirlos en el JSON-LD de `index.html`.
 - [ ] Días de anticipación, costo y zona de despacho.
 - [ ] Datos bancarios para transferencia.
-- [ ] Textos de "Nosotros", misión y visión. Nombres de las perritas del logo.
+- [ ] Texto de "Nosotros" (historia) y nombres de las perritas del logo.
 - [ ] Respuestas de la FAQ (ingredientes, conservación, pago).
 - [ ] Permiso de las clientas para mostrar sus mensajes como testimonios.
 - [ ] Dominio (se asumió `mesticha.cl` en canonical, og:url, sitemap y JSON-LD).
