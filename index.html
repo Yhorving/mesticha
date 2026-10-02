@@ -249,6 +249,17 @@
       <li class="paso"><span class="paso__n">4</span><h3>¡A celebrar!</h3><p>Retiras o te lo llevamos. Mándanos la foto 📸</p></li>
     </ol>
     <p class="aviso" id="avisoAnticipacion"></p>
+    <div class="cta-cuenta" id="ctaCuenta">
+      <div>
+        <h3>🎁 Crea tu cuenta MestiCha<span class="cta-cuenta__dcto" data-bienvenida-titulo></span></h3>
+        <ul class="beneficios beneficios--fila">
+          <li>📦 Sigue tus pedidos paso a paso</li>
+          <li>📍 Guarda tu dirección</li>
+          <li>🎂 Te avisamos antes del cumpleaños de tu peludo</li>
+        </ul>
+      </div>
+      <button class="btn btn--primario" type="button" id="ctaCrearCuenta">Crear mi cuenta</button>
+    </div>
   </div>
 </section>
 
@@ -399,7 +410,14 @@
             </div>
             <div id="pgCrearCuentaBox">
               <p class="ya-cuenta">¿Ya tienes cuenta? <button type="button" class="link" id="pgIrLogin">Inicia sesión</button></p>
-              <label class="check"><input type="checkbox" id="pgCrearCuenta" checked><span>Crear mi cuenta para seguir mi pedido y comprar más rápido la próxima vez</span></label>
+              <div class="crear-cuenta-box">
+                <label class="check"><input type="checkbox" id="pgCrearCuenta" checked><span><b>Crear mi cuenta</b> (gratis, sólo falta una contraseña)<em class="bienvenida-chip" data-bienvenida></em></span></label>
+                <ul class="beneficios">
+                <li>📦 Sigue tu pedido paso a paso</li>
+                <li>📍 Tu dirección queda guardada</li>
+                <li>🎂 Te avisamos antes de su cumpleaños</li>
+              </ul>
+              </div>
               <label class="campo" id="pgClaveBox"><span>Elige una contraseña</span><input id="pgClave" type="password" autocomplete="new-password" minlength="6" placeholder="Mínimo 6 caracteres"></label>
             </div>
             <label class="check"><input type="checkbox" id="pgOkContacto"><span>Quiero recibir recordatorios (como el cumpleaños de mi peludo) y novedades por WhatsApp y correo</span></label>
@@ -426,7 +444,9 @@
           <h4>Resumen</h4>
           <ul class="resumen__items" id="resumenItems"></ul>
           <div class="carrito__linea"><span>Subtotal</span><span id="rsSubtotal"></span></div>
+          <div class="carrito__linea carrito__linea--bienvenida" id="rsBienvenidaLinea" hidden><span id="rsBienvenidaTexto"></span><span id="rsBienvenida"></span></div>
           <div class="carrito__linea" id="rsDespachoLinea" hidden><span>Despacho</span><span id="rsDespacho"></span></div>
+          <p class="bienvenida-pista" id="rsBienvenidaPista" hidden></p>
           <div class="carrito__linea carrito__linea--total"><span>Total</span><span id="rsTotal"></span></div>
           <button class="btn btn--primario btn--ancho" id="btnPagar" form="formPago" type="submit">Pagar</button>
           <p class="resumen__seguro">🔒 Pago seguro. Tus datos sólo se usan para tu pedido.</p>
@@ -444,6 +464,22 @@
       <h2 id="exitoTitulo">¡Pedido confirmado!</h2>
       <p id="exitoTexto"></p>
       <div class="transferencia" id="exitoTransferencia" hidden></div>
+      <div class="exito-cuenta" id="exitoCuenta" hidden>
+        <h3>📦 ¿Quieres seguir este pedido?</h3>
+        <p>Crea tu cuenta con los datos de tu compra (<b id="ecEmail"></b>). Sólo elige una contraseña<span data-bienvenida-proxima></span>:</p>
+        <ul class="beneficios">
+                <li>📦 Sigue tu pedido paso a paso</li>
+                <li>📍 Tu dirección queda guardada</li>
+                <li>🎂 Te avisamos antes de su cumpleaños</li>
+              </ul>
+        <form id="formExitoCuenta" class="exito-cuenta__form" novalidate>
+          <input id="ecClave" type="password" autocomplete="new-password" placeholder="Contraseña (mínimo 6)" aria-label="Contraseña">
+          <button class="btn btn--primario" type="submit">Crear mi cuenta</button>
+        </form>
+        <label class="check"><input type="checkbox" id="ecOk" checked><span>Acepto recordatorios por WhatsApp y correo</span></label>
+        <p class="error" id="ecError" hidden></p>
+      </div>
+      <p class="exito-cuenta__ok" id="exitoCuentaOk" hidden>✅ ¡Listo! Tu cuenta quedó creada y este pedido ya está en <b>Mis pedidos</b>.</p>
       <div class="exito__acciones">
         <button class="btn btn--primario" id="exitoSeguimiento">Ver estado de mi pedido</button>
         <a class="btn btn--whatsapp" id="exitoWhatsapp" target="_blank" rel="noopener">Avisar por WhatsApp</a>
@@ -479,6 +515,7 @@
       <form id="formCuenta" novalidate hidden>
         <h2>Crea tu cuenta</h2>
         <p class="modal__bajada">Sigue tus pedidos y guarda los datos de tu peludo. Te avisamos antes de su cumpleaños para que no se quede sin torta 🎂</p>
+        <p class="bienvenida-banner" data-bienvenida-banner hidden></p>
         <label class="campo"><span>Tu nombre</span><input id="ctNombre" type="text" autocomplete="name" required></label>
         <div class="campo-doble campo-doble--igual">
           <label class="campo"><span>Correo</span><input id="ctEmail" type="email" autocomplete="email" required></label>

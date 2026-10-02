@@ -272,3 +272,12 @@
 .prod-promo .letra-chica { margin: 8px 0 0; }
 .con-dcto { color: #B01E32 !important; }
 .prod-promo__pct b { white-space: nowrap; }
+
+/* ---------- Con cuenta / invitados ---------- */
+.cuenta-badge { display: inline-block; margin-top: 4px; font-size: .72rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: #F3EAE2; color: #8C7467; white-space: nowrap; }
+.cuenta-badge--si { background: #E3EEFF; color: #2457A6; }
+.tabla td .cuenta-badge { display: table; }
+.resumen-cuentas { margin: -6px 0 14px; color: var(--cafe-2); font-size: .92rem; }
+.resumen-cuentas b { color: var(--cafe); }
+.fila-invitado td:first-child b { color: var(--cafe-2); }
+.btn--invitar { display: inline-block; font-size: .78rem; padding: 6px 12px; text-decoration: none; border-radius: 999px; font-weight: 800; }

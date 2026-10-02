@@ -194,6 +194,13 @@ const Servicios = (() => {
     // ---- Panel de administración ----
     todos,
 
+    // Un invitado que crea su cuenta después de comprar: el pedido queda a su nombre
+    vincular(id, clienteId) {
+      // vinculado: no cuenta como "primera compra con cuenta" (el descuento queda para la próxima)
+      const lista = todos().map(p => p.id === id ? { ...p, clienteId, vinculado: true } : p);
+      escribir(K_PEDIDOS, lista);
+    },
+
     // Editar datos de envío desde el panel: tipo, dirección, fecha y costo de despacho.
     // Recalcula el total; si cambia retiro ↔ despacho, "Listo para retirar" ↔ "En camino".
     editarEntrega(id, { tipo, direccion, fecha, despacho }) {
@@ -207,7 +214,7 @@ const Servicios = (() => {
           ...p,
           entrega: { tipo, direccion: tipo === "despacho" ? direccion : "", fecha },
           despacho: costo,
-          total: p.subtotal + costo,
+          total: p.subtotal - (p.descuentoBienvenida?.monto || 0) + costo,
           etapa: traducir(p.etapa),
           historial: p.historial.map(h => ({ ...h, etapa: traducir(h.etapa) })),
           editado: ahora(),
@@ -219,6 +226,9 @@ const Servicios = (() => {
 
     // Pedido ingresado a mano desde el panel (WhatsApp, Instagram, en persona…).
     // No avanza solo: MestiCha mueve las etapas.
+    // ¿Ya compró con su cuenta? (para el descuento de bienvenida)
+    yaComproConCuenta: clienteId => todos().some(p => p.clienteId === clienteId && !p.vinculado && !p.manual && p.etapa !== "cancelado"),
+
     async crearManual(pedido, etapa = "recibido") {
       const p = await pedidos.crear({ ...pedido, manual: true });
       // si ya está pagado, como mínimo queda "Pago confirmado"
@@ -296,7 +306,7 @@ const Servicios = (() => {
   // ---------------- Configuración de la tienda (editable desde el panel) ----------------
   // Se guarda aparte y se aplica sobre CONFIG de datos.js al cargar cualquier página.
   const K_CONFIG = "mesticha-config";
-  const EDITABLES = ["whatsapp", "instagram", "correoContacto", "correoAvisos", "diasAnticipacion", "costoDespacho", "zonaDespacho", "transferencia"];
+  const EDITABLES = ["whatsapp", "instagram", "correoContacto", "correoAvisos", "diasAnticipacion", "costoDespacho", "zonaDespacho", "descuentoBienvenida", "transferencia"];
   function aplicarConfig(c) {
     if (!c) return;
     EDITABLES.forEach(k => {

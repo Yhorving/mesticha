@@ -379,6 +379,16 @@
   const pgMetodo = () => Servicios.pagos.metodos.find(m => m.id === $("input[name=pgMetodo]:checked").value);
   const pgDespacho = () => pgEntrega() === "despacho" ? CONFIG.costoDespacho : 0;
 
+  // Descuento de bienvenida: primera compra con cuenta (o creando la cuenta en este checkout)
+  const pctBienvenida = () => Math.max(0, Math.min(90, Math.round(+CONFIG.descuentoBienvenida || 0)));
+  function bienvenidaAplica() {
+    if (!pctBienvenida()) return false;
+    const c = Servicios.cuenta.actual();
+    return c ? !Servicios.pedidos.yaComproConCuenta(c.id) : $("#pgCrearCuenta").checked;
+  }
+  const montoBienvenida = () => Math.round(subtotal() * pctBienvenida() / 100 / 10) * 10;
+  const descuentoBienvenida = () => bienvenidaAplica() ? montoBienvenida() : 0;
+
   function pintarResumen() {
     $("#resumenItems").innerHTML = carrito.map(it => {
       const p = porId(it.id);
@@ -389,7 +399,15 @@
     $("#rsDespachoLinea").hidden = !esDespacho;
     $("#rsDespacho").textContent = CONFIG.costoDespacho ? clp(CONFIG.costoDespacho) : "A convenir";
     $("#rsSubtotal").textContent = clp(subtotal());
-    const total = subtotal() + pgDespacho();
+    const dB = descuentoBienvenida();
+    $("#rsBienvenidaLinea").hidden = !dB;
+    $("#rsBienvenidaTexto").textContent = `🎁 Bienvenida -${pctBienvenida()}%`;
+    $("#rsBienvenida").textContent = `-${clp(dB)}`;
+    // si no crea la cuenta, mostrarle cuánto se pierde de ahorrar
+    const pierde = !dB && pctBienvenida() && !Servicios.cuenta.actual();
+    $("#rsBienvenidaPista").hidden = !pierde;
+    $("#rsBienvenidaPista").textContent = `💡 Marca "Crear mi cuenta" y ahorra ${clp(montoBienvenida())} en esta compra.`;
+    const total = subtotal() - dB + pgDespacho();
     $("#rsTotal").textContent = clp(total);
     $("#btnPagar").textContent = pgMetodo().id === "transferencia" ? "Confirmar pedido" : `Pagar ${clp(total)}`;
   }
@@ -441,6 +459,7 @@
     $("#pgError").textContent = error; $("#pgError").hidden = !error;
     if (error) return;
 
+    const dBienvenida = descuentoBienvenida();
     // Cuenta: crear si lo pidió, o actualizar el consentimiento si ya existe
     const ok = $("#pgOkContacto").checked;
     let cliente = Servicios.cuenta.actual();
@@ -466,7 +485,8 @@
       cliente: { nombre: d.nombre, email: d.email, telefono: d.telefono },
       items: carrito.map(it => ({ id: it.id, nombre: porId(it.id).nombre, detalle: it.detalle, cant: it.cant, precio: precioItem(it), ...(listaItem(it) > precioItem(it) ? { precioLista: listaItem(it) } : {}) })),
       entrega: { tipo: pgEntrega(), direccion: d.direccion, fecha: d.fecha },
-      subtotal: subtotal(), despacho: pgDespacho(), total: subtotal() + pgDespacho(),
+      subtotal: subtotal(), despacho: pgDespacho(), total: subtotal() - dBienvenida + pgDespacho(),
+      ...(dBienvenida ? { descuentoBienvenida: { pct: pctBienvenida(), monto: dBienvenida } } : {}),
       pago: { metodo: metodo.id, estado: "iniciado" },
     });
 
@@ -477,6 +497,27 @@
     mostrarExito(pedido, r.estado);
     carrito = []; guardar(); pintarCarrito();
   });
+
+  let ultimoPedido = null;
+  $("#formExitoCuenta").addEventListener("submit", async e => {
+    e.preventDefault();
+    const p = ultimoPedido, clave = $("#ecClave").value, ok = $("#ecOk").checked;
+    if (clave.length < 6) { $("#ecError").textContent = "La contraseña debe tener al menos 6 caracteres."; $("#ecError").hidden = false; return; }
+    try {
+      const c = await Servicios.cuenta.crear({
+        nombre: p.cliente.nombre, email: p.cliente.email, telefono: p.cliente.telefono, clave,
+        direccion: p.entrega.tipo === "despacho" ? p.entrega.direccion : null, okWhatsapp: ok, okEmail: ok,
+      });
+      Servicios.pedidos.vincular(p.id, c.id);
+      $("#exitoCuenta").hidden = true; $("#exitoCuentaOk").hidden = false;
+      pintarCuenta();
+      aviso(`¡Bienvenid@ a MestiCha, ${c.nombre.split(" ")[0]}! 🐾`);
+    } catch (err) {
+      $("#ecError").innerHTML = `${esc(err.message)} <button type="button" class="link" id="ecLogin">Iniciar sesión</button>`;
+      $("#ecError").hidden = false;
+    }
+  });
+  $("#ecError").addEventListener("click", e => { if (e.target.id === "ecLogin") abrirCuenta("login"); });
 
   function mostrarExito(pedido, estado) {
     const [a, m, dd] = pedido.entrega.fecha.split("-");
@@ -507,6 +548,12 @@
     $("#exitoWhatsapp").textContent = pagado ? "Avisar por WhatsApp" : "Enviar comprobante por WhatsApp";
     $("#exitoWhatsapp").href = linkWA(texto);
     $("#exitoSeguimiento").onclick = () => abrirPedido(pedido.id);
+    ultimoPedido = pedido;
+    const invitado = !Servicios.cuenta.actual();
+    $("#exitoCuenta").hidden = !invitado;
+    $("#exitoCuentaOk").hidden = true;
+    $("#ecEmail").textContent = pedido.cliente.email;
+    $("#ecClave").value = ""; $("#ecError").hidden = true;
   }
 
   // ---------- Cuenta ----------
@@ -564,6 +611,7 @@
     const c = Servicios.cuenta.actual();
     $("#abrirCuenta").classList.toggle("activa", !!c);
     $("#cuentaEtiqueta").textContent = c ? primerNombre(c.nombre) : "Mi cuenta";
+    $("#ctaCuenta").hidden = !!c;
     if (!c) return;
     $("#pfNombre").textContent = primerNombre(c.nombre);
     $("#pfEmail").textContent = c.email;
@@ -626,6 +674,7 @@
     }).join("");
     $("#pdItems").innerHTML = p.items.map(it =>
       `<li><span>${it.cant} × ${esc(it.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}</span><b>${clp(it.precio * it.cant)}</b></li>`).join("")
+      + (p.descuentoBienvenida ? `<li><span>🎁 Bienvenida -${p.descuentoBienvenida.pct}%</span><b>-${clp(p.descuentoBienvenida.monto)}</b></li>` : "")
       + (p.despacho ? `<li><span>Despacho</span><b>${clp(p.despacho)}</b></li>` : "");
     $("#pdTotal").textContent = clp(p.total);
     $("#pdWhatsapp").href = linkWA(`¡Hola MestiCha! 🐾 Quería consultar por mi pedido ${p.id}.`);
@@ -740,6 +789,20 @@
     cerrarTodo();
     aviso("Sesión cerrada");
   });
+
+  // ---------- Textos del descuento de bienvenida ----------
+  if (pctBienvenida()) {
+    const pc = pctBienvenida();
+    $$("[data-bienvenida]").forEach(el => { el.textContent = ` 🎁 ${pc}% de descuento en esta compra`; });
+    $$("[data-bienvenida-proxima]").forEach(el => { el.textContent = ` y tu próxima compra tiene ${pc}% de descuento 🎁`; });
+    $$("[data-bienvenida-titulo]").forEach(el => { el.textContent = ` · ${pc}% en tu primera compra`; });
+    $$("[data-bienvenida-banner]").forEach(el => { el.textContent = `🎁 Tu primera compra con cuenta tiene ${pc}% de descuento.`; el.hidden = false; });
+  }
+
+  // ---------- Invitación a crear cuenta ----------
+  $("#ctaCrearCuenta").addEventListener("click", () => abrirCuenta("registro"));
+  // link para compartir: .../index.html#crear-cuenta abre el registro
+  if (location.hash === "#crear-cuenta" && !Servicios.cuenta.actual()) setTimeout(() => abrirCuenta("registro"), 400);
 
   // ---------- WhatsApp flotante ----------
   const wa = $("#waFlotante");

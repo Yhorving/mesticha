@@ -17,6 +17,8 @@ const CONFIG = {
   diasAnticipacion: 3,          // CONFIRMAR
   costoDespacho: 3500,          // CONFIRMAR (0 = a convenir)
   zonaDespacho: "Santiago",     // CONFIRMAR
+  // % de descuento en la primera compra hecha con cuenta (0 = sin descuento). CONFIRMAR
+  descuentoBienvenida: 10,
   // Acceso inicial al panel admin.html. SÓLO DEMO: está a la vista en el código.
   // Se cambia en Configuración → Seguridad. En producción: Supabase Auth.
   adminEmail: "admin@mesticha.cl",

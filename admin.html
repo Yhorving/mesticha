@@ -117,6 +117,11 @@
           <option value="retiro">Sólo retiro</option>
           <option value="despacho">Sólo despacho</option>
         </select>
+        <select id="filtroCuentaPedido">
+          <option value="todos">Con y sin cuenta</option>
+          <option value="con">👤 Con cuenta</option>
+          <option value="sin">🙋 Invitados (sin cuenta)</option>
+        </select>
         <div class="adm-filtros__der">
           <button class="btn btn--primario btn--chico" id="nuevoPedido">＋ Nuevo pedido</button>
         </div>
@@ -136,10 +141,16 @@
     <section class="vista" data-vista="clientes" hidden>
       <div class="adm-filtros">
         <input class="buscador" id="buscaCliente" type="search" placeholder="Buscar por nombre, correo, teléfono o mascota…">
+        <div class="segmentado" id="filtroCuenta" role="group" aria-label="Tipo de cliente">
+          <button data-cuenta="todos" class="activo">Todos</button>
+          <button data-cuenta="con">👤 Con cuenta</button>
+          <button data-cuenta="sin">🙋 Invitados</button>
+        </div>
         <div class="adm-filtros__der">
           <button class="btn btn--secundario btn--chico" id="exportarCSV">⬇ Exportar CSV</button>
         </div>
       </div>
+      <p class="resumen-cuentas" id="resumenCuentas"></p>
       <div class="card card--tabla">
         <div class="tabla-wrap">
           <table class="tabla">
@@ -184,6 +195,7 @@
             <label class="campo"><span>Días de anticipación para pedir</span><input id="cfDias" type="number" min="0" max="30"></label>
             <label class="campo"><span>Costo de despacho (CLP, 0 = a convenir)</span><input id="cfDespacho" type="number" min="0" step="100"></label>
             <label class="campo"><span>Zona de despacho</span><input id="cfZona" type="text" placeholder="Santiago"></label>
+            <label class="campo"><span>🎁 Descuento de bienvenida (%) <small>(primera compra con cuenta · 0 = sin descuento)</small></span><input id="cfBienvenida" type="number" min="0" max="90" step="1"></label>
           </article>
 
           <article class="card">

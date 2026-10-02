@@ -13,6 +13,7 @@ Se abre con doble clic en `index.html`; no necesita instalar nada.
 | Cuentas de clientes: crear cuenta, iniciar/cerrar sesión, mascotas con cumpleaños, consentimiento | 🧪 **demo**: se guardan sólo en el navegador |
 | Historial de pedidos y seguimiento (recibido → pago → preparando → en camino/listo → entregado) | 🧪 **demo**: avanza solo cada 90 s |
 | Panel `admin.html`: dashboard, pedidos (ingresar a mano, cambiar etapa, cancelar, avisar por WhatsApp), clientes (exportar CSV), productos (crear, editar, varias fotos, promociones con % y fecha, marcar agotado, ocultar, eliminar) | 🧪 **demo**: clave `mesticha2026`, datos del navegador |
+| Cuenta opcional con incentivo: 10% de bienvenida en la primera compra con cuenta; el panel separa clientes con cuenta e invitados y permite invitarlos por WhatsApp | 🧪 **demo** |
 | Collage del inicio con fotos que van rotando | ✅ (fotos en `HERO_FOTOS` de `js/datos.js`) |
 | Una sola "Torta personalizada" con carrusel de fotos; tamaño y decoración se eligen en "Arma su torta" | ✅ (opciones y precios en `OPCIONES_TORTA` de `js/datos.js`) |
 | Botón flotante de WhatsApp | ✅ (falta el número, ver abajo) |
@@ -25,6 +26,7 @@ Instagram, despacho y datos de transferencia también se editan desde el panel �
 
 - [x] **Número de WhatsApp**: +56 9 4083 2214 (se cambia en el panel → Configuración).
 - [ ] Correo de contacto y correo para avisos de pedidos (panel → Configuración).
+- [ ] **% de descuento de bienvenida** (primera compra con cuenta). Quedó en 10%; se cambia en el panel → Configuración (0 = sin descuento).
 - [ ] **Precios** de cada producto. Los actuales son de ejemplo. Repetirlos en el JSON-LD de `index.html`.
 - [ ] Días de anticipación, costo y zona de despacho.
 - [ ] Datos bancarios para transferencia.

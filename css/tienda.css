@@ -236,3 +236,30 @@ body.bloqueado .wa-flotante { display: none; }
 .personaliza__precio--oferta { color: #D7263D; line-height: 1.1; }
 .precio__antes { display: block; font-family: var(--f-texto); font-size: .8rem; color: var(--cafe-2); font-weight: 700; }
 .item__precio s { display: block; font-size: .78rem; color: var(--cafe-2); font-weight: 600; }
+
+/* ---------- Invitación a crear cuenta ---------- */
+.beneficios { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; font-size: .86rem; color: var(--cafe-2); font-weight: 600; }
+.beneficios--fila { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: .92rem; }
+.crear-cuenta-box { background: var(--rosa-suave); border: 1.5px solid var(--rosa-borde); border-radius: var(--radio-s); padding: 12px 14px; margin-bottom: 12px; }
+.crear-cuenta-box .check { margin: 0; }
+.exito-cuenta { background: var(--blanco); border: 2px dashed var(--rosa-borde); border-radius: var(--radio); padding: 20px; max-width: 460px; margin: 18px auto 0; text-align: left; }
+.exito-cuenta h3 { font-size: 1.15rem; margin-bottom: 6px; }
+.exito-cuenta p { margin: 0 0 6px; font-size: .92rem; color: var(--cafe-2); }
+.exito-cuenta__form { display: flex; gap: 8px; margin: 14px 0 10px; flex-wrap: wrap; }
+.exito-cuenta__form input { flex: 1 1 180px; padding: 12px 14px; border-radius: var(--radio-s); border: 1.5px solid #EADBD0; background: var(--crema); font: inherit; color: var(--cafe); min-width: 0; }
+.exito-cuenta__form .btn { flex: 1 0 auto; }
+.exito-cuenta__ok { background: #DDF5E6; color: #1E7A43; border-radius: var(--radio-s); padding: 12px 16px; font-weight: 700; max-width: 460px; margin: 18px auto 0; }
+.cta-cuenta { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin: 24px auto 0; max-width: 900px; background: var(--blanco); border: 2px solid var(--rosa-borde); border-radius: var(--radio); padding: 22px 26px; box-shadow: var(--sombra-s); }
+.cta-cuenta h3 { font-size: 1.3rem; margin: 0; }
+@media (max-width: 600px) {
+  .cta-cuenta { padding: 18px; }
+  .cta-cuenta .btn { width: 100%; }
+  .beneficios--fila { flex-direction: column; }
+}
+
+/* ---------- Descuento de bienvenida ---------- */
+.bienvenida-chip { display: block; font-style: normal; font-weight: 800; color: #D7263D; font-size: .86rem; margin-top: 2px; }
+.carrito__linea--bienvenida { color: #D7263D; font-weight: 800; }
+.bienvenida-pista { background: #FFF3C9; border-radius: 10px; padding: 8px 12px; font-size: .82rem; font-weight: 700; margin: 6px 0 10px; }
+.bienvenida-banner { background: #FFF5F6; border: 1px dashed #F3B6BF; color: #B01E32; border-radius: var(--radio-s); padding: 10px 14px; font-weight: 800; font-size: .9rem; }
+.cta-cuenta__dcto { color: #D7263D; }

@@ -24,6 +24,12 @@
   const METODOS = { webpay: "Webpay", mercadopago: "Mercado Pago", transferencia: "Transferencia", efectivo: "Efectivo" };
   const ORIGENES = { whatsapp: "📱 WhatsApp", instagram: "📸 Instagram", presencial: "🤝 En persona", telefono: "☎️ Llamada", otro: "💬 Otro" };
   const origenDe = p => p.origen ? ORIGENES[p.origen] : "🛒 Web";
+  // Cuenta del pedido: por id o por correo (un invitado que después se registró)
+  const cuentaDe = (p, cuentas = S.admin.clientes()) =>
+    cuentas.find(c => c.id === p.clienteId || (p.cliente.email && p.cliente.email.toLowerCase() === c.email)) || null;
+  const badgeCuenta = con => con ? `<span class="cuenta-badge cuenta-badge--si">👤 Con cuenta</span>` : `<span class="cuenta-badge">🙋 Invitado</span>`;
+  const linkRegistro = () => new URL("index.html#crear-cuenta", location.href).href;
+  const invitarWA = (nombre, tel) => linkCliente(tel, `¡Hola ${nombre.split(" ")[0]}! Gracias por comprar en MestiCha 🐾 Te invitamos a crear tu cuenta aquí: ${linkRegistro()}\nAsí puedes seguir tus pedidos paso a paso, guardar tu dirección y te avisamos antes del cumpleaños de tu peludo 🎂`);
 
   // WhatsApp al cliente
   const telWA = t => { let d = String(t).replace(/\D/g, ""); if (d.length === 9 && d[0] === "9") d = "56" + d; return d; };
@@ -241,22 +247,24 @@
   addEventListener("resize", () => { clearTimeout(tResize); tResize = setTimeout(() => { if (!$('[data-vista="dashboard"].vista').hidden) pintarDashboard(); }, 150); });
 
   // ======================= PEDIDOS =======================
-  ["#buscaPedido", "#filtroEtapa", "#filtroEntrega"].forEach(s => $(s).addEventListener("input", pintarPedidos));
+  ["#buscaPedido", "#filtroEtapa", "#filtroEntrega", "#filtroCuentaPedido"].forEach(s => $(s).addEventListener("input", pintarPedidos));
 
   function pintarPedidos() {
     const q = $("#buscaPedido").value.trim().toLowerCase();
-    const fe = $("#filtroEtapa").value, ft = $("#filtroEntrega").value;
+    const fe = $("#filtroEtapa").value, ft = $("#filtroEntrega").value, fc = $("#filtroCuentaPedido").value;
+    const cuentas = S.admin.clientes();
     const hoy = hoyIso();
     const lista = S.pedidos.todos().filter(p =>
       (fe === "todos" || (fe === "activos" ? activo(p) : p.etapa === fe)) &&
       (ft === "todos" || p.entrega.tipo === ft) &&
+      (fc === "todos" || (fc === "con") === !!cuentaDe(p, cuentas)) &&
       (!q || [p.id, p.cliente.nombre, p.cliente.email, p.cliente.telefono].join(" ").toLowerCase().includes(q)))
       .sort((a, b) => activo(a) && activo(b) ? a.entrega.fecha.localeCompare(b.entrega.fecha) : b.creado.localeCompare(a.creado));
     $("#pedidosVacio").hidden = lista.length > 0;
     $("#tablaPedidos").innerHTML = lista.map(p => `
       <tr>
         <td data-label="Pedido"><div><b>${p.id}</b><small>${fechaLocal(p.creado)} · ${origenDe(p)}</small></div></td>
-        <td data-label="Cliente"><div>${esc(p.cliente.nombre)}<small>${esc(p.cliente.telefono)}</small></div></td>
+        <td data-label="Cliente"><div>${esc(p.cliente.nombre)}<small>${esc(p.cliente.telefono)}</small>${badgeCuenta(cuentaDe(p, cuentas))}</div></td>
         <td data-label="Entrega"><div><span class="${activo(p) && p.entrega.fecha < hoy ? "urgente" : ""}">${fechaCorta(p.entrega.fecha)}</span><small>${p.entrega.tipo === "despacho" ? "🚚 " + esc(p.entrega.direccion) : "🏠 Retiro"}</small></div></td>
         <td data-label="Total" class="num"><div>${clp(p.total)}</div></td>
         <td data-label="Pago"><div>${METODOS[p.pago.metodo] || p.pago.metodo}<small>${p.pago.estado === "pagado" ? "✔ pagado" : "pendiente"}</small></div></td>
@@ -288,10 +296,13 @@
     $("#mpCliente").innerHTML = `<b>${esc(p.cliente.nombre)}</b>`
       + (p.cliente.email ? `<br>✉️ <a href="mailto:${esc(p.cliente.email)}">${esc(p.cliente.email)}</a>` : "")
       + (p.cliente.telefono ? `<br>📱 ${esc(p.cliente.telefono)}` : "")
-      + (p.nota ? `<br>📝 <i>${esc(p.nota)}</i>` : "");
+      + (p.nota ? `<br>📝 <i>${esc(p.nota)}</i>` : "")
+      + `<br>${badgeCuenta(cuentaDe(p))}`
+      + (!cuentaDe(p) && p.cliente.telefono ? ` <a class="btn btn--wa-mini btn--invitar" target="_blank" rel="noopener" href="${invitarWA(p.cliente.nombre, p.cliente.telefono)}">Invitar a crear cuenta</a>` : "");
     $("#mpAvisar").hidden = !p.cliente.telefono;
     pintarEnvio(p);
     $("#mpItems").innerHTML = p.items.map(it => `<li><span>${it.cant} × ${esc(it.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}${it.precioLista ? `<small class="con-dcto">🏷️ con descuento</small>` : ""}</span><b>${it.precioLista ? `<s>${clp(it.precioLista * it.cant)}</s> ` : ""}${clp(it.precio * it.cant)}</b></li>`).join("")
+      + (p.descuentoBienvenida ? `<li><span>🎁 Bienvenida -${p.descuentoBienvenida.pct}%</span><b>-${clp(p.descuentoBienvenida.monto)}</b></li>` : "")
       + (p.despacho ? `<li><span>Despacho</span><b>${clp(p.despacho)}</b></li>` : "");
     $("#mpTotal").textContent = clp(p.total);
     $("#mpPago").textContent = `Pago: ${METODOS[p.pago.metodo] || p.pago.metodo} · ${p.pago.estado === "pagado" ? "pagado ✔" : "pendiente"}`;
@@ -531,39 +542,68 @@
   });
 
   // ======================= CLIENTES =======================
+  // Con cuenta (registrados) + invitados (compraron sin cuenta, agrupados por correo o WhatsApp)
+  let filtroCuenta = "todos";
   $("#buscaCliente").addEventListener("input", pintarClientes);
+  $("#filtroCuenta").addEventListener("click", e => {
+    const b = e.target.closest("[data-cuenta]"); if (!b) return;
+    filtroCuenta = b.dataset.cuenta;
+    $$("#filtroCuenta button").forEach(x => x.classList.toggle("activo", x === b));
+    pintarClientes();
+  });
 
   function resumenClientes() {
-    const ped = S.pedidos.todos();
-    return S.admin.clientes().map(c => {
-      const suyos = ped.filter(p => p.clienteId === c.id || p.cliente.email.toLowerCase() === c.email);
+    const ped = S.pedidos.todos(), cuentas = S.admin.clientes();
+    const registrados = cuentas.map(c => {
+      const suyos = ped.filter(p => cuentaDe(p, cuentas)?.id === c.id);
       return { ...c, nPedidos: suyos.length, gastado: suyos.filter(pagado).reduce((s, p) => s + p.total, 0) };
-    }).sort((a, b) => b.creado.localeCompare(a.creado));
+    });
+    const invitados = new Map();
+    ped.filter(p => !cuentaDe(p, cuentas)).forEach(p => {
+      const clave = (p.cliente.email || "").toLowerCase() || String(p.cliente.telefono || "").replace(/\D/g, "") || p.id;
+      const g = invitados.get(clave) || { id: "INV-" + clave, invitado: true, nombre: p.cliente.nombre, email: p.cliente.email || "", telefono: p.cliente.telefono || "",
+        direccion: null, mascotas: [], consentimiento: { whatsapp: false, email: false }, nPedidos: 0, gastado: 0, creado: p.creado, demo: p.demo };
+      g.nPedidos++;
+      if (pagado(p)) g.gastado += p.total;
+      if (p.creado < g.creado) g.creado = p.creado;
+      if (p.entrega.tipo === "despacho" && p.entrega.direccion && !g.direccion) g.direccion = p.entrega.direccion;
+      invitados.set(clave, g);
+    });
+    return [...registrados, ...invitados.values()].sort((a, b) => b.creado.localeCompare(a.creado));
   }
 
   function pintarClientes() {
+    const todos = resumenClientes();
+    const con = todos.filter(c => !c.invitado), sin = todos.filter(c => c.invitado);
+    const pedidosCon = con.reduce((s, c) => s + c.nPedidos, 0), pedidosTot = todos.reduce((s, c) => s + c.nPedidos, 0);
+    $("#resumenCuentas").innerHTML = `<b>${con.length}</b> con cuenta · <b>${sin.length}</b> invitado${sin.length === 1 ? "" : "s"}`
+      + (pedidosTot ? ` · el <b>${Math.round(pedidosCon / pedidosTot * 100)}%</b> de los pedidos son de clientes con cuenta` : "");
     const q = $("#buscaCliente").value.trim().toLowerCase();
-    const lista = resumenClientes().filter(c => !q ||
-      [c.nombre, c.email, c.telefono, ...(c.mascotas || []).map(m => m.nombre)].join(" ").toLowerCase().includes(q));
+    const lista = todos.filter(c => (filtroCuenta === "todos" || (filtroCuenta === "con") === !c.invitado) && (!q ||
+      [c.nombre, c.email, c.telefono, ...(c.mascotas || []).map(m => m.nombre)].join(" ").toLowerCase().includes(q)));
     $("#clientesVacio").hidden = lista.length > 0;
+    $("#clientesVacio").textContent = filtroCuenta === "sin" ? "No hay invitados: todos los que compraron tienen cuenta 🎉" : "Aún no hay clientes.";
     $("#tablaClientes").innerHTML = lista.map(c => `
-      <tr>
-        <td data-label="Cliente"><div><b>${esc(c.nombre)}</b>${c.demo ? "<small>ejemplo</small>" : ""}</div></td>
-        <td data-label="Contacto"><div>${esc(c.email)}<small>${esc(c.telefono)}</small>${c.direccion ? `<small>📍 ${esc(S.direccion.texto(c.direccion))}</small>` : ""}</div></td>
+      <tr class="${c.invitado ? "fila-invitado" : ""}">
+        <td data-label="Cliente"><div><b>${esc(c.nombre)}</b>${badgeCuenta(!c.invitado)}${c.demo ? "<small>ejemplo</small>" : ""}</div></td>
+        <td data-label="Contacto"><div>${esc(c.email) || "<small>sin correo</small>"}<small>${esc(c.telefono)}</small>${c.direccion ? `<small>📍 ${esc(S.direccion.texto(c.direccion))}</small>` : ""}</div></td>
         <td data-label="Peludos"><div>${(c.mascotas || []).map(m => `${m.especie === "gato" ? "🐱" : "🐶"} ${esc(m.nombre)}${m.cumpleanos ? `<small>🎂 ${fechaCorta(m.cumpleanos).slice(0, 5)}</small>` : ""}`).join("<br>") || "<small>—</small>"}</div></td>
         <td data-label="Pedidos" class="num"><div>${c.nPedidos}</div></td>
         <td data-label="Total gastado" class="num"><div>${clp(c.gastado)}</div></td>
-        <td data-label="Avisos"><div><span class="${c.consentimiento.whatsapp ? "si" : "no"}">${c.consentimiento.whatsapp ? "✔" : "✖"} WhatsApp</span><br><span class="${c.consentimiento.email ? "si" : "no"}">${c.consentimiento.email ? "✔" : "✖"} Correo</span></div></td>
-        <td data-label="Registro"><div>${fechaLocal(c.creado)}</div></td>
+        <td data-label="Avisos"><div>${c.invitado
+          ? (c.telefono ? `<a class="btn btn--wa-mini btn--invitar" target="_blank" rel="noopener" href="${invitarWA(c.nombre, c.telefono)}">Invitar a crear cuenta</a>` : "<small>—</small>")
+          : `<span class="${c.consentimiento.whatsapp ? "si" : "no"}">${c.consentimiento.whatsapp ? "✔" : "✖"} WhatsApp</span><br><span class="${c.consentimiento.email ? "si" : "no"}">${c.consentimiento.email ? "✔" : "✖"} Correo</span>`}</div></td>
+        <td data-label="Registro"><div>${c.invitado ? `<small>1ª compra</small>${fechaLocal(c.creado)}` : fechaLocal(c.creado)}</div></td>
       </tr>`).join("");
   }
 
   // CSV para el futuro bot / campañas
   $("#exportarCSV").addEventListener("click", () => {
-    const filas = [["nombre", "correo", "whatsapp", "direccion", "acepta_whatsapp", "acepta_correo", "mascotas", "cumpleanos", "pedidos", "total_gastado", "registrado"]];
-    resumenClientes().forEach(c => filas.push([c.nombre, c.email, c.telefono, S.direccion.texto(c.direccion), c.consentimiento.whatsapp ? "si" : "no", c.consentimiento.email ? "si" : "no",
+    const filas = [["tipo", "nombre", "correo", "whatsapp", "direccion", "acepta_whatsapp", "acepta_correo", "mascotas", "cumpleanos", "pedidos", "total_gastado", "registrado_o_primera_compra"]];
+    resumenClientes().forEach(c => filas.push([c.invitado ? "invitado" : "cuenta", c.nombre, c.email, c.telefono, S.direccion.texto(c.direccion),
+      c.consentimiento.whatsapp ? "si" : "no", c.consentimiento.email ? "si" : "no",
       (c.mascotas || []).map(m => m.nombre).join(" / "), (c.mascotas || []).map(m => m.cumpleanos || "").join(" / "), c.nPedidos, c.gastado, c.creado.slice(0, 10)]));
-    const csv = "﻿" + filas.map(f => f.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
+    const csv = "\uFEFF" + filas.map(f => f.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     a.download = `clientes-mesticha-${hoyIso()}.csv`;
@@ -799,6 +839,7 @@
     $("#cfDias").value = c.diasAnticipacion;
     $("#cfDespacho").value = c.costoDespacho;
     $("#cfZona").value = c.zonaDespacho || "";
+    $("#cfBienvenida").value = c.descuentoBienvenida || 0;
     $("#cfTitular").value = t.titular; $("#cfRut").value = t.rut; $("#cfBanco").value = t.banco;
     $("#cfTipo").value = t.tipoCuenta; $("#cfNumero").value = t.numero; $("#cfCorreoPagos").value = t.email;
     actualizarProbarWA();
@@ -825,6 +866,7 @@
       diasAnticipacion: Math.max(0, Math.round(+$("#cfDias").value || 0)),
       costoDespacho: Math.max(0, Math.round(+$("#cfDespacho").value || 0)),
       zonaDespacho: $("#cfZona").value.trim(),
+      descuentoBienvenida: Math.max(0, Math.min(90, Math.round(+$("#cfBienvenida").value || 0))),
       transferencia: {
         titular: $("#cfTitular").value.trim(), rut: $("#cfRut").value.trim(), banco: $("#cfBanco").value.trim(),
         tipoCuenta: $("#cfTipo").value.trim(), numero: $("#cfNumero").value.trim(), email: $("#cfCorreoPagos").value.trim(),
