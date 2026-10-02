@@ -1,0 +1,124 @@
+/* ============================================================
+   MestiCha · ajustes para celulares (Android y iPhone)
+   Se carga al final en index.html y admin.html.
+   ============================================================ */
+
+/* ---------- Comportamiento táctil ---------- */
+html {
+  -webkit-text-size-adjust: 100%;   /* iPhone no agranda el texto al girar */
+  text-size-adjust: 100%;
+}
+/* Sin zoom por doble toque en botones y links (el zoom con dos dedos sigue disponible) */
+html, a, button, label, input, select, textarea, summary, [role="button"] { touch-action: manipulation; }
+a, button, label, summary { -webkit-tap-highlight-color: transparent; }
+/* Red de seguridad: nada puede ensanchar la página hacia el costado */
+body { overflow-x: clip; }
+img, svg, video { max-width: 100%; }
+/* Al hacer scroll dentro de una ventana, la página de atrás no se mueve */
+.modal, .modal__caja, .carrito__cuerpo, .nav { overscroll-behavior: contain; }
+
+/* iPhone: 100vh incluye la barra de Safari; dvh usa la altura visible real */
+.modal__caja { max-height: calc(100dvh - 32px); }
+.adm-login { min-height: 100dvh; }
+
+/* Campos de fecha en iPhone: misma altura y alineación que el resto */
+input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 48px; display: block; }
+input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+input, select, textarea { font-size: max(16px, 1em); } /* < 16px hace zoom al tocar en iPhone */
+
+/* ---------- Tienda ---------- */
+@media (max-width: 820px) {
+  .header__inner { gap: 10px; }
+  .marca { min-width: 0; }
+}
+@media (max-width: 600px) {
+  .header__inner { height: 64px; }
+  .marca img { width: 42px; height: 42px; }
+  .marca span { font-size: 1.2rem; }
+  .btn-carrito, .btn-cuenta, .btn-menu { width: 42px; height: 42px; }
+  .nav { top: 64px; max-height: calc(100dvh - 64px); overflow-y: auto; }
+  html { scroll-padding-top: 74px; }
+
+  .hero__ctas .btn { flex: 1 1 180px; }
+  .hero__datos { gap: 6px 18px; font-size: .9rem; }
+  .seccion__cabecera { margin-bottom: 28px; }
+
+  /* WhatsApp: sólo el ícono, sin el globo de texto que tapa contenido */
+  .wa-flotante__texto { display: none; }
+  .wa-flotante { width: 54px; height: 54px; padding: 0; justify-content: center; bottom: max(14px, env(safe-area-inset-bottom)); }
+  .toast { bottom: 84px; font-size: .9rem; padding: 10px 18px; max-width: calc(100% - 40px); }
+
+  .modal__caja { max-height: 94dvh; }
+  .modal h2 { font-size: 1.5rem; }
+  .tabs { margin-right: 46px; }
+  .tab { padding: 9px 6px; font-size: .88rem; }
+  .carrito__cabecera, .carrito__cuerpo, .carrito__pie { padding-left: 18px; padding-right: 18px; }
+  .carrito__pie { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+  .paso-form { padding: 16px 16px 6px; }
+  .resumen { padding: 18px 16px; }
+  .personaliza__form { padding: 22px 16px; }
+  .exito__acciones .btn { flex: 1 1 100%; }
+}
+/* Pantallas muy angostas (iPhone SE, Android chicos): el logo ya dice MestiCha */
+@media (max-width: 359px) {
+  .header .marca span { display: none; }
+  .hero h1 { font-size: 2rem; }
+  .chip { font-size: .78rem; }
+  .tarjetas-opcion { grid-template-columns: 1fr; }
+  .tarjetas-opcion--deco { grid-template-columns: repeat(3, 1fr); }
+  .tarjeta-opcion--foto > span { padding: 6px 4px 8px; }
+  .filtros { gap: 6px; }
+  .filtro { padding: 7px 13px; font-size: .85rem; }
+}
+
+/* ---------- Panel de administración ---------- */
+.mp-grid > div, .checkout-grid > *, .adm-grid > *, .config-grid > * { min-width: 0; }
+.mp-bloque p, .mp-bloque a { overflow-wrap: anywhere; }
+
+@media (max-width: 820px) {
+  .adm-side { padding: 8px 12px; gap: 8px; }
+  .adm-side .marca img { width: 34px; height: 34px; }
+  .adm-nav { gap: 2px; }
+  .adm-filtros select { flex: 1 1 140px; }
+  .mp-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .adm-top h1 { font-size: 1.6rem; }
+  .adm-filtros { gap: 8px; }
+  .adm-filtros__der, .adm-filtros__der .btn { width: 100%; }
+  .card { padding: 16px; }
+  .kpi__delta { display: block; line-height: 1.35; }
+  .lista li { flex-wrap: wrap; }
+  .lista li > span:first-child { flex: 1 1 100%; }
+  .grafico { height: 200px; }
+  .barra { grid-template-columns: 1fr; gap: 4px; }
+  .config-grid { grid-template-columns: minmax(0, 1fr); }
+  .config-pie { flex-direction: column; align-items: stretch; }
+  .prod-form__foto { max-width: none; }
+}
+
+/* Tablas del panel → tarjetas en el celular */
+@media (max-width: 760px) {
+  .card--tabla { background: none; box-shadow: none; overflow: visible; }
+  .tabla, .tabla tbody, .tabla tr, .tabla td { display: block; width: 100%; }
+  .tabla thead { display: none; }
+  .tabla tr { background: var(--blanco); border-radius: 16px; box-shadow: var(--sombra-s); padding: 10px 16px; margin-bottom: 12px; }
+  .tabla tbody tr:hover { background: var(--blanco); }
+  .tabla td { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 7px 0; border-top: 1px solid #F3EAE2; text-align: right; }
+  .tabla td:first-child { border-top: none; }
+  .tabla td::before { content: attr(data-label); flex: none; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--cafe-2); padding-top: 3px; text-align: left; }
+  .tabla td > div { min-width: 0; overflow-wrap: anywhere; }
+  .tabla td.acciones::before { display: none; }
+  .tabla td.acciones > div, .tabla td.acciones .btn { width: 100%; }
+  .tabla td.acciones { padding-top: 10px; }
+  .tabla--chica tr { box-shadow: none; padding: 4px 0; margin: 0; border-radius: 0; }
+}
+
+/* Selector de etapa + Guardar: en pantallas angostas el botón baja a otra línea */
+.mp-etapa { flex-wrap: wrap; }
+.mp-etapa select { min-width: 0; flex: 1 1 180px; }
+.mp-etapa .btn { flex: 1 0 auto; }
+@media (max-width: 600px) {
+  .card.card--tabla { padding: 0; }
+  .campo-doble--igual { gap: 0 14px; }
+}

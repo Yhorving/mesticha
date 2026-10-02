@@ -252,13 +252,13 @@
     $("#pedidosVacio").hidden = lista.length > 0;
     $("#tablaPedidos").innerHTML = lista.map(p => `
       <tr>
-        <td><b>${p.id}</b><small>${fechaLocal(p.creado)}</small></td>
-        <td>${esc(p.cliente.nombre)}<small>${esc(p.cliente.telefono)}</small></td>
-        <td><span class="${activo(p) && p.entrega.fecha < hoy ? "urgente" : ""}">${fechaCorta(p.entrega.fecha)}</span><small>${p.entrega.tipo === "despacho" ? "🚚 " + esc(p.entrega.direccion) : "🏠 Retiro"}</small></td>
-        <td class="num">${clp(p.total)}</td>
-        <td>${{ webpay: "Webpay", mercadopago: "Mercado Pago", transferencia: "Transferencia" }[p.pago.metodo]}<small>${p.pago.estado === "pagado" ? "✔ pagado" : "pendiente"}</small></td>
-        <td>${badge(p)}</td>
-        <td><button class="btn btn--secundario" data-abrir="${p.id}">Gestionar</button></td>
+        <td data-label="Pedido"><div><b>${p.id}</b><small>${fechaLocal(p.creado)}</small></div></td>
+        <td data-label="Cliente"><div>${esc(p.cliente.nombre)}<small>${esc(p.cliente.telefono)}</small></div></td>
+        <td data-label="Entrega"><div><span class="${activo(p) && p.entrega.fecha < hoy ? "urgente" : ""}">${fechaCorta(p.entrega.fecha)}</span><small>${p.entrega.tipo === "despacho" ? "🚚 " + esc(p.entrega.direccion) : "🏠 Retiro"}</small></div></td>
+        <td data-label="Total" class="num"><div>${clp(p.total)}</div></td>
+        <td data-label="Pago"><div>${{ webpay: "Webpay", mercadopago: "Mercado Pago", transferencia: "Transferencia" }[p.pago.metodo]}<small>${p.pago.estado === "pagado" ? "✔ pagado" : "pendiente"}</small></div></td>
+        <td data-label="Etapa"><div>${badge(p)}</div></td>
+        <td data-label="" class="acciones"><div><button class="btn btn--secundario" data-abrir="${p.id}">Gestionar</button></div></td>
       </tr>`).join("");
   }
 
@@ -339,13 +339,13 @@
     $("#clientesVacio").hidden = lista.length > 0;
     $("#tablaClientes").innerHTML = lista.map(c => `
       <tr>
-        <td><b>${esc(c.nombre)}</b>${c.demo ? "<small>ejemplo</small>" : ""}</td>
-        <td>${esc(c.email)}<small>${esc(c.telefono)}</small></td>
-        <td>${(c.mascotas || []).map(m => `${m.especie === "gato" ? "🐱" : "🐶"} ${esc(m.nombre)}${m.cumpleanos ? `<small>🎂 ${fechaCorta(m.cumpleanos).slice(0, 5)}</small>` : ""}`).join("<br>") || "<small>—</small>"}</td>
-        <td class="num">${c.nPedidos}</td>
-        <td class="num">${clp(c.gastado)}</td>
-        <td><span class="${c.consentimiento.whatsapp ? "si" : "no"}">${c.consentimiento.whatsapp ? "✔" : "✖"} WhatsApp</span><br><span class="${c.consentimiento.email ? "si" : "no"}">${c.consentimiento.email ? "✔" : "✖"} Correo</span></td>
-        <td>${fechaLocal(c.creado)}</td>
+        <td data-label="Cliente"><div><b>${esc(c.nombre)}</b>${c.demo ? "<small>ejemplo</small>" : ""}</div></td>
+        <td data-label="Contacto"><div>${esc(c.email)}<small>${esc(c.telefono)}</small></div></td>
+        <td data-label="Peludos"><div>${(c.mascotas || []).map(m => `${m.especie === "gato" ? "🐱" : "🐶"} ${esc(m.nombre)}${m.cumpleanos ? `<small>🎂 ${fechaCorta(m.cumpleanos).slice(0, 5)}</small>` : ""}`).join("<br>") || "<small>—</small>"}</div></td>
+        <td data-label="Pedidos" class="num"><div>${c.nPedidos}</div></td>
+        <td data-label="Total gastado" class="num"><div>${clp(c.gastado)}</div></td>
+        <td data-label="Avisos"><div><span class="${c.consentimiento.whatsapp ? "si" : "no"}">${c.consentimiento.whatsapp ? "✔" : "✖"} WhatsApp</span><br><span class="${c.consentimiento.email ? "si" : "no"}">${c.consentimiento.email ? "✔" : "✖"} Correo</span></div></td>
+        <td data-label="Registro"><div>${fechaLocal(c.creado)}</div></td>
       </tr>`).join("");
   }
 
