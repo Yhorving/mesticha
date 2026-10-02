@@ -207,3 +207,4 @@
 .card--proximo { background: #FBF6F1; border: 1.5px dashed #E6D8CC; box-shadow: none; }
 .pronto { font-family: var(--f-texto); font-size: .7rem; font-weight: 800; background: #FFF3C9; color: #8A6A00; padding: 2px 10px; border-radius: 999px; vertical-align: middle; margin-left: 6px; }
 .check--off { opacity: .55; cursor: not-allowed; }
+.aviso-local { margin: 0 0 16px; font-weight: 600; line-height: 1.5; }

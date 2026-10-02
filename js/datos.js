@@ -67,15 +67,6 @@ const PRODUCTOS = [
     descripcion: "Bolsita de galletas horneadas con forma de hueso y la M de MestiCha. Premio perfecto para el día a día.",
     etiqueta: "Favorita",
   },
-  {
-    id: "galletas-surtidas",
-    nombre: "Galletas surtidas",
-    categoria: "galletas",
-    para: ["perro", "gato"],
-    precio: 6990,
-    img: "img/galletas-surtidas.jpg",
-    descripcion: "Bolsa más grande con flores, huellitas y letras en dos sabores. Para los que piden más.",
-  },
 ];
 
 // Fotos que van rotando en el collage del inicio (una posición cambia cada pocos segundos).
@@ -96,7 +87,7 @@ const HERO_FOTOS = {
   b: [
     { img: "img/galletas-packs.jpg",  alt: "Packs de galletas para perros con forma de hueso", pos: "50% 40%" },
     { img: "img/cumple-set.jpg",      alt: "Set de cumpleaños: pupcake, donas y galleta huella", pos: "50% 60%" },
-    { img: "img/galletas-surtidas.jpg", alt: "Bolsa de galletas surtidas MestiCha", pos: "50% 50%" },
+    { img: "img/galletas-surtidas.jpg", alt: "Galletas MestiCha con formas de flor, huella y letra", pos: "50% 50%" },
     { img: "img/pupcake.jpg",         alt: "Pupcake rosado con galleta de inicial", pos: "50% 60%" },
   ],
 };
