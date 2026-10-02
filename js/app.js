@@ -49,10 +49,11 @@
     const lista = PRODUCTOS.filter(p => p.activo !== false && (
       filtro === "todos" || p.categoria === filtro || p.para.includes(filtro)));
     grid.innerHTML = lista.map((p, i) => `
-      <article class="producto" style="animation-delay:${i * 50}ms">
+      <article class="producto${p.agotado ? " producto--agotado" : ""}" style="animation-delay:${i * 50}ms">
         <div class="producto__foto">
           ${fotoProducto(p)}
-          ${p.etiqueta ? `<span class="producto__etiqueta">${esc(p.etiqueta)}</span>` : ""}
+          ${p.agotado ? `<span class="producto__etiqueta producto__etiqueta--agotado">Agotado</span>`
+            : p.etiqueta ? `<span class="producto__etiqueta">${esc(p.etiqueta)}</span>` : ""}
           <span class="producto__para" title="Apto para">${p.para.map(x => x === "perro" ? "🐶" : "🐱").join(" ")}</span>
         </div>
         <div class="producto__info">
@@ -60,7 +61,9 @@
           <p>${esc(p.descripcion)}</p>
           <div class="producto__pie">
             <span class="precio">${p.personalizable ? "<small>desde</small>" : ""}${clp(desde(p))}</span>
-            ${p.personalizable
+            ${p.agotado
+              ? `<button class="btn btn--agotado" disabled>Agotado</button>`
+              : p.personalizable
               ? `<button class="btn btn--primario" data-personalizar="${p.id}">Personalizar</button>`
               : `<button class="btn btn--primario" data-agregar="${p.id}">Agregar</button>`}
           </div>
@@ -220,6 +223,9 @@
       setTimeout(() => { img.src = d.deco.img; $("#ejemploTexto").textContent = d.deco.nombre; img.classList.remove("cambiando"); }, 180);
     }
     $("#tortaError").hidden = true;
+    const agotada = !TORTA() || TORTA().agotado;
+    $("#tortaAgotada").hidden = !agotada;
+    $("#formTorta button[type=submit]").disabled = agotada;
   }
   $("#formTorta").addEventListener("input", actualizarPreview);
   $("#formTorta").addEventListener("change", actualizarPreview);
@@ -229,7 +235,7 @@
     e.preventDefault();
     const d = datosTorta();
     const torta = TORTA();
-    if (!torta) { aviso("Las tortas no están disponibles por ahora"); return; }
+    if (!torta || torta.agotado) { aviso("Las tortas están agotadas por ahora 🐾"); return; }
     if (!d.nombre) { $("#tortaError").hidden = false; $("#tortaNombre").focus(); return; }
     const detalle = [
       `${d.tamano.nombre} · ${d.deco.nombre}`,
@@ -251,6 +257,7 @@
   const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(carrito)); } catch {} };
 
   function agregar({ id, detalle = "", precio }) {
+    if (porId(id)?.agotado) { aviso(`${porId(id).nombre} está agotado por ahora`); return; }
     const existente = carrito.find(it => it.id === id && it.detalle === detalle);
     if (existente) existente.cant++;
     else carrito.push({ id, detalle, cant: 1, ...(precio ? { precio } : {}) });
@@ -278,15 +285,16 @@
     $("#carritoItems").innerHTML = carrito.map((it, i) => {
       const p = porId(it.id);
       return `
-      <li class="item">
+      <li class="item${p.agotado ? " item--agotado" : ""}">
         <img src="${p.img}" alt="">
         <div>
           <div class="item__nombre">${esc(p.nombre)}</div>
+          ${p.agotado ? `<div class="item__agotado">Se agotó · quítalo para continuar</div>` : ""}
           ${it.detalle ? `<div class="item__detalle">${esc(it.detalle)}</div>` : ""}
           <div class="item__cant">
             <button data-menos="${i}" aria-label="Quitar uno">−</button>
             <span>${it.cant}</span>
-            <button data-mas="${i}" aria-label="Agregar uno">+</button>
+            <button data-mas="${i}" aria-label="Agregar uno"${p.agotado ? " disabled" : ""}>+</button>
           </div>
         </div>
         <div>
@@ -296,13 +304,16 @@
       </li>`;
     }).join("");
     $("#ckSubtotal").textContent = clp(subtotal());
+    const hayAgotados = carrito.some(it => porId(it.id).agotado);
+    $("#irAPagar").disabled = hayAgotados;
+    $("#irAPagar").textContent = hayAgotados ? "Quita lo agotado para pagar" : "Ir a pagar";
   }
 
   $("#carritoItems").addEventListener("click", e => {
     const b = e.target.closest("button");
     if (!b) return;
     const i = +(b.dataset.mas ?? b.dataset.menos ?? b.dataset.quitar);
-    if ("mas" in b.dataset) carrito[i].cant++;
+    if ("mas" in b.dataset && !porId(carrito[i].id).agotado) carrito[i].cant++;
     if ("menos" in b.dataset && --carrito[i].cant < 1) carrito.splice(i, 1);
     if ("quitar" in b.dataset) carrito.splice(i, 1);
     guardar(); pintarCarrito();
@@ -371,6 +382,7 @@
   $("#formPago").addEventListener("change", pintarResumen);
 
   function abrirCheckout() {
+    if (carrito.some(it => porId(it.id).agotado)) { aviso("Hay productos agotados en tu carrito"); return; }
     const c = Servicios.cuenta.actual();
     $("#pagoFormulario").hidden = false; $("#pagoProcesando").hidden = true; $("#pagoExito").hidden = true;
     $("#pgError").hidden = true;

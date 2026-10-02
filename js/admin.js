@@ -367,10 +367,10 @@
 
   function pintarProductos() {
     $("#gridProductos").innerHTML = S.productos.lista().map(p => `
-      <article class="aprod${p.activo === false ? " inactivo" : ""}">
+      <article class="aprod${p.activo === false ? " inactivo" : ""}${p.agotado ? " agotado" : ""}">
         <div class="aprod__foto">
           ${p.img ? `<img src="${esc(p.img)}" alt="">` : ""}
-          <span class="aprod__estado">${p.activo === false ? "🙈 Oculto" : "👁 Visible"}</span>
+          <span class="aprod__estado">${p.activo === false ? "🙈 Oculto" : p.agotado ? "🚫 Agotado" : "👁 Visible"}</span>
           ${fotosDe(p).length > 1 ? `<span class="aprod__nfotos">📷 ${fotosDe(p).length}</span>` : ""}
         </div>
         <div class="aprod__cuerpo">
@@ -379,6 +379,7 @@
           <div class="aprod__precio">${p.personalizable ? `<small>desde</small> ${clp(desdeTorta())}` : clp(p.precio)}</div>
           <div class="aprod__acciones">
             <button data-editar="${p.id}">✏️ Editar</button>
+            <button data-agotado="${p.id}" class="${p.agotado ? "stock" : ""}">${p.agotado ? "✅ Hay stock" : "🚫 Agotado"}</button>
             <button data-visible="${p.id}">${p.activo === false ? "👁 Mostrar" : "🙈 Ocultar"}</button>
             <button class="peligro" data-eliminar="${p.id}">🗑 Eliminar</button>
           </div>
@@ -390,6 +391,12 @@
     const b = e.target.closest("button"); if (!b) return;
     const lista = S.productos.lista();
     if (b.dataset.editar) abrirProducto(b.dataset.editar);
+    if (b.dataset.agotado) {
+      const p = lista.find(x => x.id === b.dataset.agotado);
+      S.productos.guardar({ ...p, agotado: !p.agotado });
+      pintarProductos();
+      aviso(p.agotado ? `"${p.nombre}" vuelve a estar disponible` : `"${p.nombre}" marcado como agotado`);
+    }
     if (b.dataset.visible) {
       const p = lista.find(x => x.id === b.dataset.visible);
       S.productos.guardar({ ...p, activo: p.activo === false });
@@ -441,6 +448,7 @@
     $("#prGato").checked = p ? p.para.includes("gato") : false;
     $("#prPersonalizable").checked = !!p?.personalizable;
     $("#prActivo").checked = p ? p.activo !== false : true;
+    $("#prAgotado").checked = !!p?.agotado;
     $("#prFoto").value = "";
     $("#prError").hidden = true;
     pintarFotos(); modoPrecio();
@@ -508,6 +516,7 @@
       para,
       personalizable: $("#prPersonalizable").checked,
       activo: $("#prActivo").checked,
+      agotado: $("#prAgotado").checked,
       img: fotos[0] || "",
       imgs: fotos.slice(),
     };

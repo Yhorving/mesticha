@@ -194,3 +194,15 @@ body.bloqueado .wa-flotante { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .wa-flotante::before, .spinner { animation: none; }
 }
+
+/* ---------- Producto agotado ---------- */
+.producto--agotado .producto__foto img { filter: grayscale(.85); opacity: .75; }
+.producto__etiqueta--agotado { background: var(--cafe); }
+.btn--agotado { background: #EDE4DC; color: #8C7467; cursor: not-allowed; }
+.btn--agotado:hover { transform: none; }
+.item--agotado img { filter: grayscale(1); opacity: .6; }
+.item__agotado { font-size: .78rem; font-weight: 800; color: #B3261E; }
+#irAPagar:disabled { background: #EDE4DC; color: #8C7467; box-shadow: none; cursor: not-allowed; transform: none; }
+.agotado-aviso { background: #F6E1DF; color: #8C2A22; border-radius: var(--radio-s); padding: 12px 16px; font-weight: 700; font-size: .9rem; margin: 6px 0 0; }
+.personaliza__form button[type=submit]:disabled { background: #EDE4DC; color: #8C7467; box-shadow: none; cursor: not-allowed; transform: none; }
+.item__cant button:disabled { opacity: .35; cursor: not-allowed; }
