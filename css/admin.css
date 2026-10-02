@@ -212,3 +212,37 @@
 .aprod.agotado .aprod__estado { background: var(--cafe); color: var(--crema); }
 .aprod__acciones button.stock { color: #1E7A43; border-color: #BFE6CD; }
 .check small { color: var(--cafe-2); font-weight: 600; }
+
+/* ---------- Nuevo pedido (manual) ---------- */
+.np-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; margin-top: 8px; }
+.np-grid > div { min-width: 0; }
+.np-grid .campo { margin-bottom: 12px; }
+.np-grid .campo > span small { font-weight: 600; color: var(--cafe-2); }
+.np-grid .mp-bloque { padding-bottom: 16px; }
+.np-grid .opciones { margin-bottom: 12px; }
+.np-items { display: grid; gap: 10px; margin-bottom: 12px; }
+.np-item { background: var(--crema); border: 1px solid #EFE3D8; border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
+.np-item__fila { display: flex; gap: 8px; align-items: center; }
+.np-item select, .np-item input { padding: 9px 11px; border-radius: 10px; border: 1.5px solid #E6D8CC; background: var(--blanco); font: inherit; color: var(--cafe); min-width: 0; }
+.np-item__fila > select[data-campo="id"] { flex: 1; }
+.np-item input[data-campo="cant"] { width: 70px; flex: none; text-align: center; }
+.np-item__fila--torta > * { flex: 1 1 0; }
+.np-item input[data-campo="detalle"] { flex: 1; }
+.np-item__precio { display: flex; align-items: center; gap: 4px; flex: none; font-weight: 800; }
+.np-item__precio input { width: 110px; text-align: right; }
+.np-item__quitar { flex: none; width: 34px; height: 34px; border-radius: 50%; border: none; background: #F6E1DF; color: #B3261E; font-weight: 800; }
+.np-total { background: var(--blanco); border-radius: var(--radio-s); padding: 14px 18px; }
+@media (max-width: 820px) {
+  .np-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .np-item__fila--torta { flex-wrap: wrap; }
+  .np-item__fila--torta > input { flex: 1 1 100%; }
+  .np-item__fila:last-child { flex-wrap: wrap; }
+  .np-item__precio { flex: 1 1 100%; justify-content: flex-end; }
+  .np-item__precio input { flex: 1; }
+}
+/* las filas de producto nunca más anchas que su recuadro */
+.np-items { grid-template-columns: minmax(0, 1fr); }
+.np-item { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.np-item__fila > * { min-width: 0; }

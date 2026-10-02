@@ -117,6 +117,9 @@
           <option value="retiro">Sólo retiro</option>
           <option value="despacho">Sólo despacho</option>
         </select>
+        <div class="adm-filtros__der">
+          <button class="btn btn--primario btn--chico" id="nuevoPedido">＋ Nuevo pedido</button>
+        </div>
       </div>
       <div class="card card--tabla">
         <div class="tabla-wrap">
@@ -228,6 +231,89 @@
       </div>
     </section>
   </main>
+</div>
+
+<!-- ========== MODAL NUEVO PEDIDO (manual) ========== -->
+<div class="modal" id="mNuevoPedido" role="dialog" aria-modal="true" aria-labelledby="npTitulo" hidden>
+  <div class="modal__caja modal__caja--ancha">
+    <button class="cerrar modal__cerrar" data-cerrar aria-label="Cerrar">✕</button>
+    <h2 id="npTitulo">Nuevo pedido</h2>
+    <p class="modal__bajada">Para pedidos que llegan por WhatsApp, Instagram, teléfono o en persona.</p>
+    <form id="formNuevoPedido" novalidate>
+      <div class="np-grid">
+        <div>
+          <section class="mp-bloque">
+            <h4>👤 Cliente</h4>
+            <label class="campo"><span>Cliente registrado <small>(opcional)</small></span>
+              <select id="npCliente"><option value="">— Escribir datos a mano —</option></select>
+            </label>
+            <label class="campo"><span>Nombre</span><input id="npNombre" type="text" autocomplete="off" required></label>
+            <div class="campo-doble campo-doble--igual">
+              <label class="campo"><span>WhatsApp</span><input id="npTelefono" type="tel" autocomplete="off" placeholder="+56 9 1234 5678"></label>
+              <label class="campo"><span>Correo <small>(opcional)</small></span><input id="npEmail" type="email" autocomplete="off"></label>
+            </div>
+            <label class="campo"><span>¿Por dónde llegó?</span>
+              <select id="npOrigen">
+                <option value="whatsapp">📱 WhatsApp</option>
+                <option value="instagram">📸 Instagram</option>
+                <option value="presencial">🤝 En persona</option>
+                <option value="telefono">☎️ Llamada</option>
+                <option value="otro">💬 Otro</option>
+              </select>
+            </label>
+          </section>
+
+          <section class="mp-bloque">
+            <h4>🧁 Productos</h4>
+            <div id="npItems" class="np-items"></div>
+            <button type="button" class="btn btn--secundario btn--chico" id="npAgregarItem">＋ Agregar producto</button>
+          </section>
+        </div>
+
+        <div>
+          <section class="mp-bloque">
+            <h4>🚚 Entrega</h4>
+            <div class="opciones">
+              <label class="opcion"><input type="radio" name="npEntrega" value="retiro" checked><span>🏠 Retiro</span></label>
+              <label class="opcion"><input type="radio" name="npEntrega" value="despacho"><span>🚚 Despacho</span></label>
+            </div>
+            <div id="npDespachoBox" hidden>
+              <label class="campo"><span>Comuna y dirección</span><input id="npDireccion" type="text" autocomplete="off"></label>
+              <label class="campo"><span>Costo de despacho (CLP)</span><input id="npCostoDespacho" type="number" min="0" step="100"></label>
+            </div>
+            <label class="campo"><span>Fecha de entrega</span><input id="npFecha" type="date" required></label>
+          </section>
+
+          <section class="mp-bloque">
+            <h4>💳 Pago y etapa</h4>
+            <div class="campo-doble campo-doble--igual">
+              <label class="campo"><span>Medio de pago</span>
+                <select id="npMetodo">
+                  <option value="transferencia">🏦 Transferencia</option>
+                  <option value="efectivo">💵 Efectivo</option>
+                  <option value="webpay">💳 Tarjeta / Webpay</option>
+                  <option value="mercadopago">🟦 Mercado Pago</option>
+                </select>
+              </label>
+              <label class="campo"><span>¿Ya pagó?</span>
+                <select id="npPagado"><option value="no">⏳ Pendiente</option><option value="si">✔ Pagado</option></select>
+              </label>
+            </div>
+            <label class="campo"><span>Etapa inicial</span><select id="npEtapa"></select></label>
+            <label class="campo"><span>Nota interna <small>(opcional)</small></span><input id="npNota" type="text" maxlength="120" placeholder="Ej: retira la hermana, sin pollo"></label>
+          </section>
+
+          <div class="np-total">
+            <div class="carrito__linea"><span>Subtotal</span><span id="npSubtotal">$0</span></div>
+            <div class="carrito__linea" id="npDespachoLinea" hidden><span>Despacho</span><span id="npDespachoValor"></span></div>
+            <div class="carrito__linea carrito__linea--total"><span>Total</span><span id="npTotal">$0</span></div>
+            <p class="error" id="npError" hidden></p>
+            <button class="btn btn--primario btn--ancho" type="submit">Guardar pedido</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- ========== MODAL PEDIDO ========== -->

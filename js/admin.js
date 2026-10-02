@@ -18,9 +18,12 @@
 
   const pagado = p => p.etapa !== "cancelado" && p.pago.estado === "pagado";
   const activo = p => p.etapa !== "entregado" && p.etapa !== "cancelado";
-  const etiquetaEtapa = p => p.etapa === "recibido" && p.pago.metodo === "transferencia"
-    ? "⏳ Por pagar" : `${E[p.etapa].icono} ${E[p.etapa].titulo}`;
-  const badge = p => `<span class="estado estado--${p.etapa}${p.etapa === "recibido" && p.pago.metodo === "transferencia" ? " estado--espera" : ""}">${etiquetaEtapa(p)}</span>`;
+  const porPagar = p => p.etapa === "recibido" && p.pago.estado !== "pagado" && ["transferencia", "efectivo"].includes(p.pago.metodo);
+  const etiquetaEtapa = p => porPagar(p) ? "⏳ Por pagar" : `${E[p.etapa].icono} ${E[p.etapa].titulo}`;
+  const badge = p => `<span class="estado estado--${p.etapa}${porPagar(p) ? " estado--espera" : ""}">${etiquetaEtapa(p)}</span>`;
+  const METODOS = { webpay: "Webpay", mercadopago: "Mercado Pago", transferencia: "Transferencia", efectivo: "Efectivo" };
+  const ORIGENES = { whatsapp: "📱 WhatsApp", instagram: "📸 Instagram", presencial: "🤝 En persona", telefono: "☎️ Llamada", otro: "💬 Otro" };
+  const origenDe = p => p.origen ? ORIGENES[p.origen] : "🛒 Web";
 
   // WhatsApp al cliente
   const telWA = t => { let d = String(t).replace(/\D/g, ""); if (d.length === 9 && d[0] === "9") d = "56" + d; return d; };
@@ -252,11 +255,11 @@
     $("#pedidosVacio").hidden = lista.length > 0;
     $("#tablaPedidos").innerHTML = lista.map(p => `
       <tr>
-        <td data-label="Pedido"><div><b>${p.id}</b><small>${fechaLocal(p.creado)}</small></div></td>
+        <td data-label="Pedido"><div><b>${p.id}</b><small>${fechaLocal(p.creado)} · ${origenDe(p)}</small></div></td>
         <td data-label="Cliente"><div>${esc(p.cliente.nombre)}<small>${esc(p.cliente.telefono)}</small></div></td>
         <td data-label="Entrega"><div><span class="${activo(p) && p.entrega.fecha < hoy ? "urgente" : ""}">${fechaCorta(p.entrega.fecha)}</span><small>${p.entrega.tipo === "despacho" ? "🚚 " + esc(p.entrega.direccion) : "🏠 Retiro"}</small></div></td>
         <td data-label="Total" class="num"><div>${clp(p.total)}</div></td>
-        <td data-label="Pago"><div>${{ webpay: "Webpay", mercadopago: "Mercado Pago", transferencia: "Transferencia" }[p.pago.metodo]}<small>${p.pago.estado === "pagado" ? "✔ pagado" : "pendiente"}</small></div></td>
+        <td data-label="Pago"><div>${METODOS[p.pago.metodo] || p.pago.metodo}<small>${p.pago.estado === "pagado" ? "✔ pagado" : "pendiente"}</small></div></td>
         <td data-label="Etapa"><div>${badge(p)}</div></td>
         <td data-label="" class="acciones"><div><button class="btn btn--secundario" data-abrir="${p.id}">Gestionar</button></div></td>
       </tr>`).join("");
@@ -281,12 +284,17 @@
   function pintarModalPedido() {
     const p = S.pedidos.obtener(pedidoActual); if (!p) return;
     $("#mpTitulo").innerHTML = `Pedido ${p.id} ${badge(p)}`;
-    $("#mpSub").textContent = `Comprado el ${fechaHora(p.creado)} · ${p.entrega.tipo === "despacho" ? "🚚 Despacho" : "🏠 Retiro"} el ${diaSemana(p.entrega.fecha)}`;
-    $("#mpCliente").innerHTML = `<b>${esc(p.cliente.nombre)}</b><br>✉️ <a href="mailto:${esc(p.cliente.email)}">${esc(p.cliente.email)}</a><br>📱 ${esc(p.cliente.telefono)}${p.entrega.tipo === "despacho" ? `<br>📍 ${esc(p.entrega.direccion)}` : ""}`;
+    $("#mpSub").textContent = `${p.origen ? "Ingresado a mano" : "Comprado en la web"} el ${fechaHora(p.creado)} · ${origenDe(p)} · ${p.entrega.tipo === "despacho" ? "🚚 Despacho" : "🏠 Retiro"} el ${diaSemana(p.entrega.fecha)}`;
+    $("#mpCliente").innerHTML = `<b>${esc(p.cliente.nombre)}</b>`
+      + (p.cliente.email ? `<br>✉️ <a href="mailto:${esc(p.cliente.email)}">${esc(p.cliente.email)}</a>` : "")
+      + (p.cliente.telefono ? `<br>📱 ${esc(p.cliente.telefono)}` : "")
+      + (p.entrega.tipo === "despacho" ? `<br>📍 ${esc(p.entrega.direccion)}` : "")
+      + (p.nota ? `<br>📝 <i>${esc(p.nota)}</i>` : "");
+    $("#mpAvisar").hidden = !p.cliente.telefono;
     $("#mpItems").innerHTML = p.items.map(it => `<li><span>${it.cant} × ${esc(it.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}</span><b>${clp(it.precio * it.cant)}</b></li>`).join("")
       + (p.despacho ? `<li><span>Despacho</span><b>${clp(p.despacho)}</b></li>` : "");
     $("#mpTotal").textContent = clp(p.total);
-    $("#mpPago").textContent = `Pago: ${{ webpay: "Webpay", mercadopago: "Mercado Pago", transferencia: "Transferencia" }[p.pago.metodo]} · ${p.pago.estado === "pagado" ? "pagado ✔" : "pendiente"}`;
+    $("#mpPago").textContent = `Pago: ${METODOS[p.pago.metodo] || p.pago.metodo} · ${p.pago.estado === "pagado" ? "pagado ✔" : "pendiente"}`;
     const orden = S.pedidos.etapasDe(p);
     $("#mpEtapa").innerHTML = [...orden, "cancelado"].map(et =>
       `<option value="${et}" ${et === p.etapa ? "selected" : ""}>${E[et].icono} ${et === "recibido" ? "Recibido / por pagar" : E[et].titulo}</option>`).join("");
@@ -319,6 +327,157 @@
       pintarModalPedido(); pintar();
       aviso("Pedido cancelado");
     }
+  });
+
+  // ======================= NUEVO PEDIDO (manual) =======================
+  let npFilas = [];
+  const fechaMinima = () => isoLocal(new Date());
+
+  function nuevaFila() {
+    const p = S.productos.lista().find(x => x.activo !== false && !x.agotado) || S.productos.lista()[0];
+    return { id: p.id, cant: 1, tamano: OPCIONES_TORTA.tamanos[0].id, deco: OPCIONES_TORTA.decoraciones[0].id, mascota: "", detalle: "", precio: null };
+  }
+  const precioSugerido = f => {
+    const p = S.productos.lista().find(x => x.id === f.id);
+    if (!p) return 0;
+    if (!p.personalizable) return p.precio;
+    const t = OPCIONES_TORTA.tamanos.find(x => x.id === f.tamano), d = OPCIONES_TORTA.decoraciones.find(x => x.id === f.deco);
+    return t.precio + d.extra;
+  };
+  const precioFila = f => f.precio ?? precioSugerido(f);
+
+  function abrirNuevoPedido() {
+    npFilas = [nuevaFila()];
+    $("#formNuevoPedido").reset();
+    $("#npCliente").innerHTML = `<option value="">— Escribir datos a mano —</option>` +
+      S.admin.clientes().sort((a, b) => a.nombre.localeCompare(b.nombre))
+        .map(c => `<option value="${c.id}">${esc(c.nombre)} · ${esc(c.telefono)}</option>`).join("");
+    $("#npEtapa").innerHTML = ["recibido", "confirmado", "preparando", "listo", "entregado"].map(et =>
+      `<option value="${et}">${et === "listo" ? "🏠 Listo para retirar / 🚚 En camino" : `${E[et].icono} ${et === "recibido" ? "Recibido / por pagar" : E[et].titulo}`}</option>`).join("");
+    $("#npCostoDespacho").value = CONFIG.costoDespacho;
+    $("#npFecha").value = isoLocal(new Date(Date.now() + CONFIG.diasAnticipacion * DIA));
+    $("#npError").hidden = true;
+    pintarFilas(); pintarTotalNP();
+    abrirModal("mNuevoPedido");
+    setTimeout(() => $("#npCliente").focus(), 50);
+  }
+  $("#nuevoPedido").addEventListener("click", abrirNuevoPedido);
+
+  // Elegir un cliente registrado completa sus datos
+  $("#npCliente").addEventListener("change", e => {
+    const c = S.admin.clientes().find(x => x.id === e.target.value);
+    $("#npNombre").value = c?.nombre || "";
+    $("#npTelefono").value = c?.telefono || "";
+    $("#npEmail").value = c?.email || "";
+    const m = c?.mascotas?.[0];
+    if (m) npFilas.forEach(f => { if (!f.mascota) f.mascota = m.nombre; });
+    pintarFilas();
+  });
+
+  function pintarFilas() {
+    const prods = S.productos.lista();
+    $("#npItems").innerHTML = npFilas.map((f, i) => {
+      const p = prods.find(x => x.id === f.id);
+      return `
+      <div class="np-item" data-fila="${i}">
+        <div class="np-item__fila">
+          <select data-campo="id" aria-label="Producto">${prods.map(x =>
+            `<option value="${x.id}" ${x.id === f.id ? "selected" : ""}>${esc(x.nombre)}${x.agotado ? " (agotado)" : x.activo === false ? " (oculto)" : ""}</option>`).join("")}</select>
+          <input data-campo="cant" type="number" min="1" max="99" value="${f.cant}" aria-label="Cantidad">
+          ${npFilas.length > 1 ? `<button type="button" class="np-item__quitar" data-quitar-fila="${i}" aria-label="Quitar producto">✕</button>` : ""}
+        </div>
+        ${p?.personalizable ? `
+        <div class="np-item__fila np-item__fila--torta">
+          <select data-campo="tamano" aria-label="Tamaño">${OPCIONES_TORTA.tamanos.map(t => `<option value="${t.id}" ${t.id === f.tamano ? "selected" : ""}>${t.nombre}</option>`).join("")}</select>
+          <select data-campo="deco" aria-label="Decoración">${OPCIONES_TORTA.decoraciones.map(d => `<option value="${d.id}" ${d.id === f.deco ? "selected" : ""}>${d.nombre}</option>`).join("")}</select>
+          <input data-campo="mascota" type="text" placeholder="Nombre del peludo" value="${esc(f.mascota)}" maxlength="20">
+        </div>` : ""}
+        <div class="np-item__fila">
+          <input data-campo="detalle" type="text" placeholder="Detalle (color, edad, nota…)" value="${esc(f.detalle)}" maxlength="80">
+          <label class="np-item__precio"><span>$</span><input data-campo="precio" type="number" min="0" step="10" value="${precioFila(f)}" aria-label="Precio unitario"></label>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  $("#npItems").addEventListener("input", e => {
+    const fila = e.target.closest("[data-fila]"), campo = e.target.dataset.campo;
+    if (!fila || !campo) return;
+    const f = npFilas[+fila.dataset.fila];
+    if (campo === "cant") f.cant = Math.max(1, Math.round(+e.target.value || 1));
+    else if (campo === "precio") f.precio = e.target.value === "" ? null : Math.max(0, Math.round(+e.target.value));
+    else {
+      f[campo] = e.target.value;
+      // cambiar producto, tamaño o decoración recalcula el precio sugerido
+      if (["id", "tamano", "deco"].includes(campo)) { f.precio = null; pintarFilas(); }
+    }
+    pintarTotalNP();
+  });
+  $("#npItems").addEventListener("click", e => {
+    const q = e.target.closest("[data-quitar-fila]"); if (!q) return;
+    npFilas.splice(+q.dataset.quitarFila, 1);
+    pintarFilas(); pintarTotalNP();
+  });
+  $("#npAgregarItem").addEventListener("click", () => { npFilas.push(nuevaFila()); pintarFilas(); pintarTotalNP(); });
+
+  const npEntrega = () => $("input[name=npEntrega]:checked").value;
+  function pintarTotalNP() {
+    const sub = npFilas.reduce((s, f) => s + precioFila(f) * f.cant, 0);
+    const desp = npEntrega() === "despacho" ? Math.max(0, Math.round(+$("#npCostoDespacho").value || 0)) : 0;
+    $("#npDespachoBox").hidden = npEntrega() !== "despacho";
+    $("#npDespachoLinea").hidden = !desp;
+    $("#npDespachoValor").textContent = clp(desp);
+    $("#npSubtotal").textContent = clp(sub);
+    $("#npTotal").textContent = clp(sub + desp);
+    return { sub, desp };
+  }
+  $("#formNuevoPedido").addEventListener("change", e => { if (!e.target.closest("#npItems")) pintarTotalNP(); });
+  $("#npCostoDespacho").addEventListener("input", pintarTotalNP);
+
+  $("#formNuevoPedido").addEventListener("submit", async e => {
+    e.preventDefault();
+    const nombre = $("#npNombre").value.trim(), tel = $("#npTelefono").value.trim(), email = $("#npEmail").value.trim();
+    const direccion = $("#npDireccion").value.trim(), fecha = $("#npFecha").value;
+    const prods = S.productos.lista();
+    const falta = !nombre ? "Escribe el nombre del cliente." :
+      !tel && !email ? "Agrega al menos un WhatsApp o correo para contactarlo." :
+      tel && tel.replace(/\D/g, "").length < 8 ? "Revisa el WhatsApp." :
+      email && !emailValido(email) ? "Revisa el correo." :
+      !npFilas.length ? "Agrega al menos un producto." :
+      npFilas.some(f => prods.find(p => p.id === f.id)?.personalizable && !f.mascota.trim()) ? "Escribe el nombre del peludo para la torta." :
+      npEntrega() === "despacho" && !direccion ? "Indica la dirección de despacho." :
+      !fecha ? "Elige la fecha de entrega." : "";
+    $("#npError").textContent = falta; $("#npError").hidden = !falta;
+    if (falta) return;
+
+    const { sub, desp } = pintarTotalNP();
+    const items = npFilas.map(f => {
+      const p = prods.find(x => x.id === f.id);
+      const partes = [];
+      if (p.personalizable) {
+        const t = OPCIONES_TORTA.tamanos.find(x => x.id === f.tamano), d = OPCIONES_TORTA.decoraciones.find(x => x.id === f.deco);
+        partes.push(`${t.nombre} · ${d.nombre}`, `Para: ${f.mascota.trim()}`);
+      }
+      if (f.detalle.trim()) partes.push(f.detalle.trim());
+      return { id: p.id, nombre: p.nombre, detalle: partes.join(" · "), cant: f.cant, precio: precioFila(f) };
+    });
+    const clienteId = $("#npCliente").value || null;
+    const metodo = $("#npMetodo").value;
+    const ped = await S.pedidos.crearManual({
+      clienteId,
+      cliente: { nombre, email, telefono: tel },
+      items,
+      entrega: { tipo: npEntrega(), direccion, fecha },
+      subtotal: sub, despacho: desp, total: sub + desp,
+      pago: { metodo, estado: $("#npPagado").value === "si" ? "pagado" : "pendiente" },
+      origen: $("#npOrigen").value,
+      nota: $("#npNota").value.trim(),
+    }, $("#npEtapa").value);
+    cerrarModal();
+    $("#filtroEtapa").value = "todos"; $("#buscaPedido").value = "";
+    pintar();
+    aviso(`Pedido ${ped.id} guardado 🐾`);
+    abrirPedido(ped.id);
   });
 
   // ======================= CLIENTES =======================

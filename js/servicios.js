@@ -179,6 +179,16 @@ const Servicios = (() => {
     // ---- Panel de administración ----
     todos,
 
+    // Pedido ingresado a mano desde el panel (WhatsApp, Instagram, en persona…).
+    // No avanza solo: MestiCha mueve las etapas.
+    async crearManual(pedido, etapa = "recibido") {
+      const p = await pedidos.crear({ ...pedido, manual: true });
+      // si ya está pagado, como mínimo queda "Pago confirmado"
+      let destino = etapa === "recibido" && pedido.pago.estado === "pagado" ? "confirmado" : etapa;
+      if (destino === "listo" && pedido.entrega.tipo === "despacho") destino = "en-camino";
+      return destino === "recibido" ? p : pedidos.cambiarEtapa(p.id, destino);
+    },
+
     // Lleva el pedido a una etapa concreta (hacia adelante o atrás) o lo cancela
     cambiarEtapa(id, etapa) {
       const lista = todos().map(p => {
