@@ -24,6 +24,38 @@
   const METODOS = { webpay: "Webpay", mercadopago: "Mercado Pago", transferencia: "Transferencia", efectivo: "Efectivo" };
   const ORIGENES = { whatsapp: "📱 WhatsApp", instagram: "📸 Instagram", presencial: "🤝 En persona", telefono: "☎️ Llamada", otro: "💬 Otro" };
   const origenDe = p => p.origen ? ORIGENES[p.origen] : "🛒 Web";
+  // ---- Tortas personalizadas: nombre, edad, color… ----
+  const hexSeguro = h => /^#[0-9a-f]{6}$/i.test(h || "") ? h : "";
+  const edadTxt = e => e ? `${e} ${e === "1" ? "año" : "años"}` : "";
+  // Resumen corto para la lista: "🎂 Kim (3) · Clásica · rosado"
+  const resumenItems = p => p.items.map(it => {
+    const t = S.torta.pers(it);
+    if (!t) return `${it.cant > 1 ? it.cant + "× " : ""}${esc(it.nombre)}`;
+    const muestra = hexSeguro(t.colorHex) ? `<i class="muestra" style="background:${t.colorHex}"></i>` : "";
+    return `🎂 ${it.cant > 1 ? it.cant + "× " : ""}<b>${esc(t.nombre) || "sin nombre"}</b>${t.edad ? ` (${esc(t.edad)})` : ""}`
+      + [t.tamano, t.color && `${muestra}${esc(t.color)}`].filter(Boolean).map(x => ` · ${x}`).join("");
+  }).join("<br>");
+  // Ficha completa en "Gestionar"
+  function fichaTorta(it, t) {
+    const hex = hexSeguro(t.colorHex);
+    return `
+      <li class="ficha-torta">
+        <div class="ficha-torta__cab"><span>🎂 ${it.cant} × ${esc(it.nombre)}${it.precioLista ? ` <small class="con-dcto">🏷️ con descuento</small>` : ""}</span>
+          <b>${it.precioLista ? `<s>${clp(it.precioLista * it.cant)}</s> ` : ""}${clp(it.precio * it.cant)}</b></div>
+        <div class="ficha-torta__nombre">
+          <small>Escribir en la torta</small>
+          <strong>${esc(t.nombre) || "—"}</strong>
+          ${t.edad ? `<span class="ficha-torta__edad">${esc(edadTxt(t.edad))}</span>` : ""}
+        </div>
+        <dl class="ficha-torta__datos">
+          <div><dt>Para</dt><dd>${t.especie === "gato" ? "🐱 Gato" : t.especie === "perro" ? "🐶 Perro" : "—"}</dd></div>
+          <div><dt>Tamaño</dt><dd>${esc(t.tamano) || "—"}</dd></div>
+          <div><dt>Decoración</dt><dd>${esc(t.decoracion) || "—"}</dd></div>
+          <div><dt>Color</dt><dd>${hex ? `<i class="muestra muestra--grande" style="background:${hex}"></i>` : ""}${esc(t.color) || "—"}</dd></div>
+        </dl>
+        ${t.nota ? `<p class="ficha-torta__nota">📝 ${esc(t.nota)}</p>` : ""}
+      </li>`;
+  }
   // Cuenta del pedido: por id o por correo (un invitado que después se registró)
   const cuentaDe = (p, cuentas = S.admin.clientes()) =>
     cuentas.find(c => c.id === p.clienteId || (p.cliente.email && p.cliente.email.toLowerCase() === c.email)) || null;
@@ -163,7 +195,7 @@
     const prox = ped.filter(p => activo(p) && p.entrega.fecha <= limite).sort((a, b) => a.entrega.fecha.localeCompare(b.entrega.fecha));
     $("#proximasEntregas").innerHTML = prox.length ? prox.map(p => `
       <li><span><b>${p.id}</b> · ${esc(p.cliente.nombre)}
-        <small class="${p.entrega.fecha < hoy ? "urgente" : ""}">${p.entrega.fecha < hoy ? "⚠ Atrasado · " : p.entrega.fecha === hoy ? "Hoy · " : ""}${diaSemana(p.entrega.fecha)} · ${p.entrega.tipo === "despacho" ? "🚚 despacho" : "🏠 retiro"}</small></span>
+        <small class="${p.entrega.fecha < hoy ? "urgente" : ""}">${p.entrega.fecha < hoy ? "⚠ Atrasado · " : p.entrega.fecha === hoy ? "Hoy · " : ""}${diaSemana(p.entrega.fecha)} · ${p.entrega.tipo === "despacho" ? "🚚 despacho" : "🏠 retiro"}</small><small class="prox-items">${resumenItems(p)}</small></span>
         ${badge(p)}<button class="btn btn--secundario" data-abrir="${p.id}">Ver</button></li>`).join("")
       : `<li class="vacio">No hay entregas pendientes en los próximos días 🎉</li>`;
 
@@ -258,13 +290,14 @@
       (fe === "todos" || (fe === "activos" ? activo(p) : p.etapa === fe)) &&
       (ft === "todos" || p.entrega.tipo === ft) &&
       (fc === "todos" || (fc === "con") === !!cuentaDe(p, cuentas)) &&
-      (!q || [p.id, p.cliente.nombre, p.cliente.email, p.cliente.telefono].join(" ").toLowerCase().includes(q)))
+      (!q || [p.id, p.cliente.nombre, p.cliente.email, p.cliente.telefono, ...p.items.map(it => S.torta.pers(it)?.nombre || "")].join(" ").toLowerCase().includes(q)))
       .sort((a, b) => activo(a) && activo(b) ? a.entrega.fecha.localeCompare(b.entrega.fecha) : b.creado.localeCompare(a.creado));
     $("#pedidosVacio").hidden = lista.length > 0;
     $("#tablaPedidos").innerHTML = lista.map(p => `
       <tr>
         <td data-label="Pedido"><div><b>${p.id}</b><small>${fechaLocal(p.creado)} · ${origenDe(p)}</small></div></td>
         <td data-label="Cliente"><div>${esc(p.cliente.nombre)}<small>${esc(p.cliente.telefono)}</small>${badgeCuenta(cuentaDe(p, cuentas))}</div></td>
+        <td data-label="Productos" class="col-productos"><div>${resumenItems(p)}</div></td>
         <td data-label="Entrega"><div><span class="${activo(p) && p.entrega.fecha < hoy ? "urgente" : ""}">${fechaCorta(p.entrega.fecha)}</span><small>${p.entrega.tipo === "despacho" ? "🚚 " + esc(p.entrega.direccion) : "🏠 Retiro"}</small></div></td>
         <td data-label="Total" class="num"><div>${clp(p.total)}</div></td>
         <td data-label="Pago"><div>${METODOS[p.pago.metodo] || p.pago.metodo}<small>${p.pago.estado === "pagado" ? "✔ pagado" : "pendiente"}</small></div></td>
@@ -301,7 +334,7 @@
       + (!cuentaDe(p) && p.cliente.telefono ? ` <a class="btn btn--wa-mini btn--invitar" target="_blank" rel="noopener" href="${invitarWA(p.cliente.nombre, p.cliente.telefono)}">Invitar a crear cuenta</a>` : "");
     $("#mpAvisar").hidden = !p.cliente.telefono;
     pintarEnvio(p);
-    $("#mpItems").innerHTML = p.items.map(it => `<li><span>${it.cant} × ${esc(it.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}${it.precioLista ? `<small class="con-dcto">🏷️ con descuento</small>` : ""}</span><b>${it.precioLista ? `<s>${clp(it.precioLista * it.cant)}</s> ` : ""}${clp(it.precio * it.cant)}</b></li>`).join("")
+    $("#mpItems").innerHTML = p.items.map(it => S.torta.pers(it) ? fichaTorta(it, S.torta.pers(it)) : `<li><span>${it.cant} × ${esc(it.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}${it.precioLista ? `<small class="con-dcto">🏷️ con descuento</small>` : ""}</span><b>${it.precioLista ? `<s>${clp(it.precioLista * it.cant)}</s> ` : ""}${clp(it.precio * it.cant)}</b></li>`).join("")
       + (p.descuentoBienvenida ? `<li><span>🎁 Bienvenida -${p.descuentoBienvenida.pct}%</span><b>-${clp(p.descuentoBienvenida.monto)}</b></li>` : "")
       + (p.despacho ? `<li><span>Despacho</span><b>${clp(p.despacho)}</b></li>` : "");
     $("#mpTotal").textContent = clp(p.total);
@@ -395,7 +428,8 @@
 
   function nuevaFila() {
     const p = S.productos.lista().find(x => x.activo !== false && !x.agotado) || S.productos.lista()[0];
-    return { id: p.id, cant: 1, tamano: OPCIONES_TORTA.tamanos[0].id, deco: OPCIONES_TORTA.decoraciones[0].id, mascota: "", detalle: "", precio: null };
+    return { id: p.id, cant: 1, tamano: OPCIONES_TORTA.tamanos[0].id, deco: OPCIONES_TORTA.decoraciones[0].id, mascota: "",
+      edad: "", especie: "perro", color: COLORES_DECORACION[0].id, detalle: "", precio: null };
   }
   const precioSugerido = f => {
     const p = S.productos.lista().find(x => x.id === f.id);
@@ -431,7 +465,7 @@
     $("#npEmail").value = c?.email || "";
     $("#npDireccion").value = c?.direccion ? S.direccion.texto(c.direccion) : "";
     const m = c?.mascotas?.[0];
-    if (m) npFilas.forEach(f => { if (!f.mascota) f.mascota = m.nombre; });
+    if (m) npFilas.forEach(f => { if (!f.mascota) { f.mascota = m.nombre; f.especie = m.especie || "perro"; } });
     pintarFilas();
   });
 
@@ -451,10 +485,15 @@
         <div class="np-item__fila np-item__fila--torta">
           <select data-campo="tamano" aria-label="Tamaño">${OPCIONES_TORTA.tamanos.map(t => `<option value="${t.id}" ${t.id === f.tamano ? "selected" : ""}>${t.nombre}</option>`).join("")}</select>
           <select data-campo="deco" aria-label="Decoración">${OPCIONES_TORTA.decoraciones.map(d => `<option value="${d.id}" ${d.id === f.deco ? "selected" : ""}>${d.nombre}</option>`).join("")}</select>
-          <input data-campo="mascota" type="text" placeholder="Nombre del peludo" value="${esc(f.mascota)}" maxlength="20">
+          <input data-campo="mascota" type="text" placeholder="Nombre en la torta" value="${esc(f.mascota)}" maxlength="20">
+        </div>
+        <div class="np-item__fila np-item__fila--torta">
+          <input data-campo="edad" type="number" min="0" max="30" placeholder="Edad" value="${esc(f.edad)}" aria-label="Edad">
+          <select data-campo="especie" aria-label="Perro o gato"><option value="perro" ${f.especie === "perro" ? "selected" : ""}>🐶 Perro</option><option value="gato" ${f.especie === "gato" ? "selected" : ""}>🐱 Gato</option></select>
+          <select data-campo="color" aria-label="Color">${COLORES_DECORACION.map(c => `<option value="${c.id}" ${c.id === f.color ? "selected" : ""}>Color ${c.nombre.toLowerCase()}</option>`).join("")}</select>
         </div>` : ""}
         <div class="np-item__fila">
-          <input data-campo="detalle" type="text" placeholder="Detalle (color, edad, nota…)" value="${esc(f.detalle)}" maxlength="80">
+          <input data-campo="detalle" type="text" placeholder="${p?.personalizable ? "Nota (ej: sin pollo, con velita)" : "Detalle (opcional)"}" value="${esc(f.detalle)}" maxlength="80">
           <label class="np-item__precio"><span>$</span><input data-campo="precio" type="number" min="0" step="10" value="${precioFila(f)}" aria-label="Precio unitario"></label>
         </div>
       </div>`;
@@ -514,13 +553,16 @@
     const { sub, desp } = pintarTotalNP();
     const items = npFilas.map(f => {
       const p = prods.find(x => x.id === f.id);
-      const partes = [];
-      if (p.personalizable) {
-        const t = OPCIONES_TORTA.tamanos.find(x => x.id === f.tamano), d = OPCIONES_TORTA.decoraciones.find(x => x.id === f.deco);
-        partes.push(`${t.nombre} · ${d.nombre}`, `Para: ${f.mascota.trim()}`);
-      }
-      if (f.detalle.trim()) partes.push(f.detalle.trim());
-      return { id: p.id, nombre: p.nombre, detalle: partes.join(" · "), cant: f.cant, precio: precioFila(f) };
+      if (!p.personalizable) return { id: p.id, nombre: p.nombre, detalle: f.detalle.trim(), cant: f.cant, precio: precioFila(f) };
+      // misma estructura que los pedidos de la web
+      const t = OPCIONES_TORTA.tamanos.find(x => x.id === f.tamano), d = OPCIONES_TORTA.decoraciones.find(x => x.id === f.deco);
+      const col = COLORES_DECORACION.find(c => c.id === f.color) || COLORES_DECORACION[0];
+      const edad = String(f.edad || "").trim();
+      const pers = { tamano: t.nombre, decoracion: d.nombre, nombre: f.mascota.trim(), edad, especie: f.especie,
+        color: col.nombre.toLowerCase(), colorHex: col.hex, nota: f.detalle.trim() };
+      const detalle = [`${t.nombre} · ${d.nombre}`, `Para: ${pers.nombre}${edad ? ` (${edad} ${edad === "1" ? "año" : "años"})` : ""}`,
+        f.especie === "gato" ? "Gato" : "Perro", `Color ${pers.color}`, pers.nota && `Nota: ${pers.nota}`].filter(Boolean).join(" · ");
+      return { id: p.id, nombre: p.nombre, detalle, pers, cant: f.cant, precio: precioFila(f) };
     });
     const clienteId = $("#npCliente").value || null;
     const metodo = $("#npMetodo").value;

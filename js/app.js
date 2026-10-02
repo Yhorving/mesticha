@@ -257,7 +257,9 @@
       `Color ${d.color.nombre.toLowerCase()}`,
       d.nota && `Nota: ${d.nota}`,
     ].filter(Boolean).join(" · ");
-    agregar({ id: torta.id, detalle, precio: d.precio, precioLista: d.lista });
+    const pers = { tamano: d.tamano.nombre, decoracion: d.deco.nombre, nombre: d.nombre, edad: d.edad, especie: d.especie,
+      color: d.color.nombre.toLowerCase(), colorHex: d.color.hex, nota: d.nota };
+    agregar({ id: torta.id, detalle, precio: d.precio, precioLista: d.lista, pers });
     e.target.reset();
     actualizarPreview();
   });
@@ -269,11 +271,11 @@
   carrito = carrito.filter(it => porId(it.id));
   const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(carrito)); } catch {} };
 
-  function agregar({ id, detalle = "", precio, precioLista }) {
+  function agregar({ id, detalle = "", precio, precioLista, pers }) {
     if (porId(id)?.agotado) { aviso(`${porId(id).nombre} está agotado por ahora`); return; }
     const existente = carrito.find(it => it.id === id && it.detalle === detalle);
     if (existente) existente.cant++;
-    else carrito.push({ id, detalle, cant: 1, ...(precio ? { precio } : {}), ...(precioLista > precio ? { precioLista } : {}) });
+    else carrito.push({ id, detalle, cant: 1, ...(precio ? { precio } : {}), ...(precioLista > precio ? { precioLista } : {}), ...(pers ? { pers } : {}) });
     guardar(); pintarCarrito();
     const n = $("#contadorCarrito");
     n.classList.remove("pop"); void n.offsetWidth; n.classList.add("pop");
@@ -483,7 +485,7 @@
     const pedido = await Servicios.pedidos.crear({
       clienteId: cliente?.id ?? null,
       cliente: { nombre: d.nombre, email: d.email, telefono: d.telefono },
-      items: carrito.map(it => ({ id: it.id, nombre: porId(it.id).nombre, detalle: it.detalle, cant: it.cant, precio: precioItem(it), ...(listaItem(it) > precioItem(it) ? { precioLista: listaItem(it) } : {}) })),
+      items: carrito.map(it => ({ id: it.id, nombre: porId(it.id).nombre, detalle: it.detalle, cant: it.cant, precio: precioItem(it), ...(listaItem(it) > precioItem(it) ? { precioLista: listaItem(it) } : {}), ...(it.pers ? { pers: it.pers } : {}) })),
       entrega: { tipo: pgEntrega(), direccion: d.direccion, fecha: d.fecha },
       subtotal: subtotal(), despacho: pgDespacho(), total: subtotal() - dBienvenida + pgDespacho(),
       ...(dBienvenida ? { descuentoBienvenida: { pct: pctBienvenida(), monto: dBienvenida } } : {}),

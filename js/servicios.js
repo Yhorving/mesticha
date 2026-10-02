@@ -384,7 +384,12 @@ const Servicios = (() => {
         creado.setHours(9 + Math.floor(Math.random() * 11), Math.floor(Math.random() * 60));
         const items = Array.from({ length: 1 + Math.floor(Math.random() * 2) }, () => {
           const p = azar(PRODUCTOS);
-          return { id: p.id, nombre: p.nombre, detalle: p.personalizable ? `Para: ${c.mascotas[0].nombre}` : "", cant: 1 + Math.floor(Math.random() * 2), precio: p.precio };
+          if (!p.personalizable) return { id: p.id, nombre: p.nombre, detalle: "", cant: 1 + Math.floor(Math.random() * 2), precio: p.precio };
+          const t = azar(OPCIONES_TORTA.tamanos), d = azar(OPCIONES_TORTA.decoraciones), col = azar(COLORES_DECORACION);
+          const m = c.mascotas[0], edad = String(1 + Math.floor(Math.random() * 12));
+          const pers = { tamano: t.nombre, decoracion: d.nombre, nombre: m.nombre, edad, especie: m.especie, color: col.nombre.toLowerCase(), colorHex: col.hex, nota: Math.random() < .3 ? azar(["Sin pollo, es alérgico", "Con velita", "Escribir con letra grande"]) : "" };
+          return { id: p.id, nombre: p.nombre, cant: 1, precio: t.precio + d.extra, pers,
+            detalle: [`${t.nombre} · ${d.nombre}`, `Para: ${m.nombre} (${edad} años)`, m.especie === "gato" ? "Gato" : "Perro", `Color ${pers.color}`, pers.nota && `Nota: ${pers.nota}`].filter(Boolean).join(" · ") };
         });
         const despacho = Math.random() < .5 ? CONFIG.costoDespacho : 0;
         const subtotal = items.reduce((s, it) => s + it.precio * it.cant, 0);
@@ -439,5 +444,29 @@ const Servicios = (() => {
     },
   };
 
-  return { cuenta, pedidos, pagos, productos, admin, config, direccion: { normalizar: normalizarDireccion, texto: textoDireccion } };
+  // ---------------- Personalización de tortas ----------------
+  // Los pedidos nuevos guardan item.pers = { tamano, decoracion, nombre, edad, especie, color, colorHex, nota }.
+  // Para pedidos antiguos se lee desde el texto "Clásica · Topper de galleta · Para: Kim (3 años) · Perro · Color rosado · Nota: …"
+  function persDe(it) {
+    if (it.pers) return it.pers;
+    if (!it.detalle) return null;
+    const r = { tamano: "", decoracion: "", nombre: "", edad: "", especie: "", color: "", colorHex: "", nota: "" }, otros = [];
+    it.detalle.split(" · ").map(x => x.trim()).filter(Boolean).forEach(parte => {
+      let m;
+      if (OPCIONES_TORTA.tamanos.some(t => t.nombre === parte)) r.tamano = parte;
+      else if (OPCIONES_TORTA.decoraciones.some(d => d.nombre === parte)) r.decoracion = parte;
+      else if ((m = parte.match(/^Para: (.+?)(?: \((\d+) años?\))?$/))) { r.nombre = m[1]; r.edad = m[2] || ""; }
+      else if (/^(Perro|Gato)$/.test(parte)) r.especie = parte.toLowerCase();
+      else if ((m = parte.match(/^Color (.+)$/))) {
+        r.color = m[1];
+        r.colorHex = COLORES_DECORACION.find(c => c.nombre.toLowerCase() === m[1].toLowerCase())?.hex || "";
+      }
+      else if ((m = parte.match(/^Nota: (.+)$/))) r.nota = m[1];
+      else otros.push(parte);
+    });
+    if (otros.length) r.nota = [r.nota, ...otros].filter(Boolean).join(" · ");
+    return r.nombre || r.tamano || r.decoracion ? r : null;
+  }
+
+  return { cuenta, pedidos, pagos, productos, admin, config, direccion: { normalizar: normalizarDireccion, texto: textoDireccion }, torta: { pers: persDe } };
 })();

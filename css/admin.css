@@ -281,3 +281,22 @@
 .resumen-cuentas b { color: var(--cafe); }
 .fila-invitado td:first-child b { color: var(--cafe-2); }
 .btn--invitar { display: inline-block; font-size: .78rem; padding: 6px 12px; text-decoration: none; border-radius: 999px; font-weight: 800; }
+
+/* ---------- Ficha de torta personalizada ---------- */
+.ficha-torta { display: block !important; background: #FFF8FA; border: 1.5px solid var(--rosa-borde); border-radius: 14px; padding: 12px 14px !important; margin: 8px 0; }
+.ficha-torta__cab { display: flex; justify-content: space-between; gap: 10px; font-size: .9rem; font-weight: 700; }
+.ficha-torta__cab s { color: var(--cafe-2); font-weight: 600; }
+.ficha-torta__nombre { text-align: center; background: var(--blanco); border-radius: 12px; padding: 10px; margin: 10px 0; }
+.ficha-torta__nombre small { display: block !important; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; color: var(--cafe-2); }
+.ficha-torta__nombre strong { display: block; font-family: var(--f-titulo); font-size: 1.9rem; line-height: 1.15; color: var(--rosa-osc); overflow-wrap: anywhere; }
+.ficha-torta__edad { display: inline-block; margin-top: 4px; background: var(--rosa); color: var(--blanco); font-weight: 800; font-size: .85rem; padding: 2px 12px; border-radius: 999px; }
+.ficha-torta__datos { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin: 0; }
+.ficha-torta__datos div { display: flex; flex-direction: column; }
+.ficha-torta__datos dt { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 800; color: var(--cafe-2); }
+.ficha-torta__datos dd { margin: 0; font-weight: 700; font-size: .92rem; display: flex; align-items: center; gap: 6px; }
+.ficha-torta__nota { margin: 10px 0 0 !important; background: #FFF3C9; border-radius: 10px; padding: 8px 12px; font-size: .88rem !important; font-weight: 700; }
+.muestra { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.12); font-style: normal; }
+.muestra--grande { width: 16px; height: 16px; margin: 0; }
+.col-productos { font-size: .85rem; min-width: 190px; }
+.col-productos b { font-weight: 800; }
+.prox-items { margin-top: 2px; color: var(--cafe) !important; }
