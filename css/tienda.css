@@ -1,0 +1,98 @@
+/* ============================================================
+   MestiCha · cuenta, checkout y WhatsApp flotante
+   ============================================================ */
+
+/* ---------- Cuenta (header) ---------- */
+.btn-cuenta { display: inline-flex; align-items: center; gap: 6px; height: 46px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--cafe); background: transparent; color: var(--cafe); font-weight: 800; font-size: .9rem; }
+.btn-cuenta:hover { background: var(--cafe); color: var(--crema); }
+.btn-cuenta.activa { border-color: var(--rosa); color: var(--rosa-osc); }
+.btn--ancho { width: 100%; }
+.btn-texto { display: block; margin: 12px auto 0; border: none; background: none; color: var(--cafe-2); text-decoration: underline; font-weight: 700; font-size: .88rem; }
+
+/* ---------- Modales ---------- */
+.modal { position: fixed; inset: 0; z-index: 110; background: rgba(58,35,24,.45); display: grid; place-items: center; padding: 16px; overflow-y: auto; animation: fade .2s; }
+.modal__caja { position: relative; background: var(--crema); border-radius: var(--radio); padding: 36px; width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 30px 80px -20px rgba(0,0,0,.4); }
+.modal__caja--ancha { width: min(980px, 100%); }
+.modal__cerrar { position: absolute; top: 16px; right: 16px; }
+.modal h2 { font-size: 1.9rem; padding-right: 40px; }
+.modal h4 { font-size: 1.05rem; margin: 22px 0 10px; }
+.modal__bajada { color: var(--cafe-2); }
+.demo-aviso { background: #FFF3C9; border: 1px dashed #E9C45B; border-radius: var(--radio-s); padding: 8px 14px; font-size: .85rem; font-weight: 700; margin: 6px 0 18px; }
+.letra-chica { font-size: .78rem; color: var(--cafe-2); margin: 4px 0 14px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: .9rem; margin-bottom: 10px; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--rosa); flex: none; }
+.campo-doble--igual { grid-template-columns: 1fr 1fr; }
+.mascota-fila { display: grid; grid-template-columns: 1.3fr 1fr 1.2fr; gap: 8px; }
+.mascota-fila input, .mascota-fila select { width: 100%; padding: 12px; border-radius: var(--radio-s); border: 1.5px solid #EADBD0; background: var(--blanco); font: inherit; color: var(--cafe); min-width: 0; }
+.modal .campo input, .modal .campo select { background: var(--blanco); }
+
+/* ---------- Checkout ---------- */
+.checkout-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px; align-items: start; }
+.paso-form { background: var(--blanco); border-radius: var(--radio-s); padding: 20px 22px 8px; margin-bottom: 14px; }
+.paso-form h4 { margin: 0 0 14px; display: flex; align-items: center; gap: 10px; }
+.paso-form h4 span { width: 28px; height: 28px; border-radius: 50%; background: var(--rosa); color: var(--blanco); display: grid; place-items: center; font-size: .9rem; }
+.paso-form .opciones { margin-bottom: 16px; }
+.sesion-info { background: var(--rosa-suave); padding: 8px 14px; border-radius: var(--radio-s); font-size: .88rem; font-weight: 700; }
+.metodos { display: grid; gap: 10px; margin-bottom: 14px; }
+.metodo { position: relative; }
+.metodo input { position: absolute; opacity: 0; }
+.metodo span { display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 2px 10px; padding: 12px 16px; border: 1.5px solid #EADBD0; border-radius: var(--radio-s); cursor: pointer; transition: all .15s; }
+.metodo i { font-style: normal; font-size: 1.5rem; grid-row: span 2; text-align: center; }
+.metodo b { font-size: .98rem; }
+.metodo small { color: var(--cafe-2); font-size: .8rem; }
+.metodo input:checked + span { border-color: var(--rosa); background: var(--rosa-suave); }
+.metodo input:focus-visible + span { box-shadow: 0 0 0 3px var(--rosa-borde); }
+.resumen { background: var(--blanco); border-radius: var(--radio-s); padding: 22px; position: sticky; top: 0; }
+.resumen h4 { margin-top: 0; }
+.resumen__items { list-style: none; padding: 0; margin: 0 0 14px; }
+.resumen__items li { display: flex; justify-content: space-between; gap: 10px; font-size: .88rem; padding: 8px 0; border-bottom: 1px dashed #EADBD0; }
+.resumen__items small { display: block; color: var(--cafe-2); }
+.resumen__seguro { font-size: .78rem; color: var(--cafe-2); text-align: center; margin: 10px 0 0; }
+
+.procesando, .exito { text-align: center; padding: 40px 10px; }
+.spinner { width: 54px; height: 54px; margin: 0 auto 18px; border-radius: 50%; border: 5px solid var(--rosa-suave); border-top-color: var(--rosa); animation: girar 1s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.exito__icono { font-size: 3.5rem; }
+.exito h2 { padding: 0; }
+.exito__acciones { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+.exito__acciones .btn--whatsapp { width: auto; }
+.transferencia { background: var(--blanco); border-radius: var(--radio-s); padding: 18px 22px; text-align: left; max-width: 420px; margin: 0 auto; font-size: .92rem; }
+.transferencia div { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+.transferencia small { color: var(--cafe-2); }
+
+/* ---------- Perfil ---------- */
+.perfil__datos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.perfil__datos div { background: var(--blanco); border-radius: var(--radio-s); padding: 12px 14px; overflow-wrap: anywhere; }
+.perfil__datos small { display: block; color: var(--cafe-2); font-size: .78rem; }
+.perfil__mascotas, .perfil__pedidos { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.perfil__mascotas li, .perfil__pedidos li { background: var(--blanco); border-radius: var(--radio-s); padding: 10px 14px; font-size: .9rem; display: flex; justify-content: space-between; gap: 10px; }
+.perfil__pedidos small, .perfil__mascotas small { color: var(--cafe-2); }
+.estado { font-size: .75rem; font-weight: 800; padding: 2px 10px; border-radius: 999px; background: #DDF5E6; color: #1E7A43; white-space: nowrap; align-self: center; }
+.estado--pendiente { background: #FFF3C9; color: #8A6A00; }
+
+/* ---------- WhatsApp flotante ---------- */
+.wa-flotante { position: fixed; right: 20px; bottom: 20px; z-index: 80; display: flex; align-items: center; gap: 10px; height: 60px; padding: 0 15px; border-radius: 999px; background: var(--verde-wa); color: var(--blanco); text-decoration: none; font-weight: 800; box-shadow: 0 10px 25px -8px rgba(37,211,102,.7); transition: transform .2s; }
+.wa-flotante:hover { transform: scale(1.05); }
+.wa-flotante__texto { max-width: 0; overflow: hidden; white-space: nowrap; transition: max-width .3s, margin .3s; }
+.wa-flotante:hover .wa-flotante__texto, .wa-flotante.saluda .wa-flotante__texto { max-width: 200px; margin-right: 6px; }
+.wa-flotante::before { content: ""; position: absolute; inset: 0; border-radius: inherit; border: 2px solid var(--verde-wa); animation: latido 2.4s ease-out infinite; pointer-events: none; }
+@keyframes latido { from { opacity: .8; transform: scale(1); } to { opacity: 0; transform: scale(1.35); } }
+body.bloqueado .wa-flotante { display: none; }
+
+@media (max-width: 820px) {
+  .checkout-grid { grid-template-columns: 1fr; }
+  .resumen { position: static; }
+  .btn-cuenta span { display: none; }
+  .btn-cuenta { width: 46px; padding: 0; justify-content: center; }
+}
+@media (max-width: 600px) {
+  .modal { padding: 0; place-items: end stretch; }
+  .modal__caja { padding: 28px 18px; border-radius: var(--radio) var(--radio) 0 0; max-height: 94vh; width: 100%; }
+  .campo-doble--igual, .perfil__datos { grid-template-columns: 1fr; }
+  .mascota-fila { grid-template-columns: 1fr 1fr; }
+  .mascota-fila input:first-child { grid-column: span 2; }
+  .wa-flotante { right: 14px; bottom: 14px; height: 54px; padding: 0 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wa-flotante::before, .spinner { animation: none; }
+}
