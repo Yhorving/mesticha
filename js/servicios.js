@@ -43,6 +43,20 @@ const Servicios = (() => {
   //     mascotas: [{ nombre, especie, cumpleanos }],    // cumpleaños → recordatorio de torta
   //     creado }
   const sinClave = c => { if (!c) return null; const { claveHash, ...resto } = c; return resto; };
+
+  // Dirección de envío del cliente: { comuna, calle, referencia }.
+  // Acepta también texto suelto (lo que se escribe en el checkout).
+  const normalizarDireccion = d => {
+    if (!d) return null;
+    if (typeof d === "string") return d.trim() ? { comuna: "", calle: d.trim(), referencia: "" } : null;
+    const r = { comuna: (d.comuna || "").trim(), calle: (d.calle || "").trim(), referencia: (d.referencia || "").trim() };
+    return r.comuna || r.calle ? r : null;
+  };
+  const textoDireccion = d => {
+    d = normalizarDireccion(d);
+    if (!d) return "";
+    return [d.calle, d.comuna].filter(Boolean).join(", ") + (d.referencia ? ` (${d.referencia})` : "");
+  };
   const cuentas = () => leer(K_CUENTAS, []);
 
   const cuenta = {
@@ -64,6 +78,7 @@ const Servicios = (() => {
         telefono: datos.telefono,
         consentimiento: { whatsapp: !!datos.okWhatsapp, email: !!datos.okEmail, fecha: ahora() },
         mascotas: datos.mascotas || [],
+        direccion: normalizarDireccion(datos.direccion),
         creado: ahora(),
         claveHash: await hashClave(email, datos.clave),
       };
@@ -178,6 +193,29 @@ const Servicios = (() => {
 
     // ---- Panel de administración ----
     todos,
+
+    // Editar datos de envío desde el panel: tipo, dirección, fecha y costo de despacho.
+    // Recalcula el total; si cambia retiro ↔ despacho, "Listo para retirar" ↔ "En camino".
+    editarEntrega(id, { tipo, direccion, fecha, despacho }) {
+      const cambio = { listo: "en-camino", "en-camino": "listo" };
+      const lista = todos().map(p => {
+        if (p.id !== id) return p;
+        const costo = tipo === "despacho" ? Math.max(0, Math.round(+despacho || 0)) : 0;
+        const cambiaTipo = tipo !== p.entrega.tipo;
+        const traducir = et => cambiaTipo && cambio[et] ? cambio[et] : et;
+        return {
+          ...p,
+          entrega: { tipo, direccion: tipo === "despacho" ? direccion : "", fecha },
+          despacho: costo,
+          total: p.subtotal + costo,
+          etapa: traducir(p.etapa),
+          historial: p.historial.map(h => ({ ...h, etapa: traducir(h.etapa) })),
+          editado: ahora(),
+        };
+      });
+      escribir(K_PEDIDOS, lista);
+      return lista.find(p => p.id === id);
+    },
 
     // Pedido ingresado a mano desde el panel (WhatsApp, Instagram, en persona…).
     // No avanza solo: MestiCha mueve las etapas.
@@ -377,5 +415,5 @@ const Servicios = (() => {
     },
   };
 
-  return { cuenta, pedidos, pagos, productos, admin, config };
+  return { cuenta, pedidos, pagos, productos, admin, config, direccion: { normalizar: normalizarDireccion, texto: textoDireccion } };
 })();

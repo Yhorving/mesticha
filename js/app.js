@@ -392,6 +392,7 @@
       $("#sesionInfo").textContent = `Comprando como ${c.nombre} ✔`;
       $("#pgNombre").value = c.nombre; $("#pgEmail").value = c.email; $("#pgTelefono").value = c.telefono;
       $("#pgOkContacto").checked = c.consentimiento.whatsapp || c.consentimiento.email;
+      if (c.direccion && !$("#pgDireccion").value.trim()) $("#pgDireccion").value = Servicios.direccion.texto(c.direccion);
     }
     $("#pgClaveBox").hidden = !$("#pgCrearCuenta").checked;
     pintarResumen();
@@ -431,7 +432,7 @@
     let cliente = Servicios.cuenta.actual();
     if (creaCuenta) {
       try {
-        cliente = await Servicios.cuenta.crear({ ...d, clave, okWhatsapp: ok, okEmail: ok });
+        cliente = await Servicios.cuenta.crear({ ...d, direccion: pgEntrega() === "despacho" ? d.direccion : null, clave, okWhatsapp: ok, okEmail: ok });
       } catch (err) {
         $("#pgError").textContent = err.message; $("#pgError").hidden = false;
         return;
@@ -439,6 +440,7 @@
     } else if (cliente) {
       cliente = await Servicios.cuenta.actualizar({
         telefono: d.telefono,
+        ...(pgEntrega() === "despacho" && !cliente.direccion ? { direccion: Servicios.direccion.normalizar(d.direccion) } : {}),
         consentimiento: { whatsapp: ok, email: ok, fecha: new Date().toISOString() },
       });
     }
@@ -506,6 +508,7 @@
     $("#vistaAcceso").hidden = vista !== "acceso";
     $("#perfil").hidden = vista !== "perfil";
     $("#vistaPedido").hidden = vista !== "pedido";
+    if (vista === "perfil") modoEdicion(false);
     if (vista !== "pedido") { clearInterval(refresco); pedidoAbierto = null; }
     $("#modalCuenta .modal__caja").scrollTop = 0;
   }
@@ -551,6 +554,8 @@
     $("#pfNombre").textContent = primerNombre(c.nombre);
     $("#pfEmail").textContent = c.email;
     $("#pfTelefono").textContent = c.telefono;
+    $("#pfDireccion").textContent = Servicios.direccion.texto(c.direccion) || "Sin dirección guardada";
+    $("#pfDireccion").classList.toggle("vacio", !c.direccion);
     $("#pfOkWhatsapp").checked = c.consentimiento.whatsapp;
     $("#pfOkEmail").checked = c.consentimiento.email;
     $("#pfMascotas").innerHTML = c.mascotas.length
@@ -647,6 +652,7 @@
       clave: $("#ctClave").value,
       okWhatsapp: $("#ctOkWhatsapp").checked,
       okEmail: $("#ctOkEmail").checked,
+      direccion: { calle: $("#ctCalle").value, comuna: $("#ctComuna").value, referencia: $("#ctReferencia").value },
       mascotas: $("#ctMascota").value.trim()
         ? [{ nombre: $("#ctMascota").value.trim(), especie: $("#ctEspecie").value, cumpleanos: $("#ctCumple").value || null }]
         : [],
@@ -663,6 +669,35 @@
     } catch (err) {
       $("#ctError").textContent = err.message; $("#ctError").hidden = false;
     }
+  });
+
+  // Editar mis datos
+  function modoEdicion(si) {
+    $("#formDatos").hidden = !si;
+    $("#pfDatosVista").hidden = si;
+    $("#editarDatos").hidden = si;
+    if (!si) return;
+    const c = Servicios.cuenta.actual(), d = Servicios.direccion.normalizar(c.direccion) || {};
+    $("#edNombre").value = c.nombre; $("#edTelefono").value = c.telefono;
+    $("#edCalle").value = d.calle || ""; $("#edComuna").value = d.comuna || ""; $("#edReferencia").value = d.referencia || "";
+    $("#edError").hidden = true;
+    $("#edCalle").focus();
+  }
+  $("#editarDatos").addEventListener("click", () => modoEdicion(true));
+  $("#cancelarDatos").addEventListener("click", () => modoEdicion(false));
+  $("#formDatos").addEventListener("submit", async e => {
+    e.preventDefault();
+    const nombre = $("#edNombre").value.trim(), telefono = $("#edTelefono").value.trim();
+    const falta = !nombre ? "Escribe tu nombre." : !telOk(telefono) ? "Revisa tu número de WhatsApp." : "";
+    $("#edError").textContent = falta; $("#edError").hidden = !falta;
+    if (falta) return;
+    await Servicios.cuenta.actualizar({
+      nombre, telefono,
+      direccion: Servicios.direccion.normalizar({ calle: $("#edCalle").value, comuna: $("#edComuna").value, referencia: $("#edReferencia").value }),
+    });
+    modoEdicion(false);
+    pintarCuenta();
+    aviso("Datos guardados ✔");
   });
 
   // Perfil

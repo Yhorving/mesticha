@@ -288,9 +288,9 @@
     $("#mpCliente").innerHTML = `<b>${esc(p.cliente.nombre)}</b>`
       + (p.cliente.email ? `<br>✉️ <a href="mailto:${esc(p.cliente.email)}">${esc(p.cliente.email)}</a>` : "")
       + (p.cliente.telefono ? `<br>📱 ${esc(p.cliente.telefono)}` : "")
-      + (p.entrega.tipo === "despacho" ? `<br>📍 ${esc(p.entrega.direccion)}` : "")
       + (p.nota ? `<br>📝 <i>${esc(p.nota)}</i>` : "");
     $("#mpAvisar").hidden = !p.cliente.telefono;
+    pintarEnvio(p);
     $("#mpItems").innerHTML = p.items.map(it => `<li><span>${it.cant} × ${esc(it.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}</span><b>${clp(it.precio * it.cant)}</b></li>`).join("")
       + (p.despacho ? `<li><span>Despacho</span><b>${clp(p.despacho)}</b></li>` : "");
     $("#mpTotal").textContent = clp(p.total);
@@ -306,6 +306,55 @@
     $("#mpCancelarBox").hidden = p.etapa === "cancelado";
     $("#mpCancelarBox").innerHTML = `<button class="btn-texto btn-texto--peligro" id="mpCancelar">Cancelar pedido</button>`;
   }
+
+  // ---------- Envío del pedido: ver y editar ----------
+  const tipoEnvio = () => $("input[name=feTipo]:checked")?.value || "retiro";
+  function pintarEnvio(p) {
+    const desp = p.entrega.tipo === "despacho";
+    $("#mpEntregaVista").innerHTML = (desp
+      ? `<b>🚚 Despacho</b><br>📍 ${esc(p.entrega.direccion) || "<i>sin dirección</i>"}<br>Costo: ${p.despacho ? clp(p.despacho) : "a convenir"}`
+      : `<b>🏠 Retiro</b>`) + `<br>📅 ${diaSemana(p.entrega.fecha)}`
+      + (p.editado ? `<br><small class="mp-editado">Editado el ${fechaHora(p.editado)}</small>` : "");
+    modoEnvio(false);
+  }
+  function modoEnvio(si) {
+    $("#formEntrega").hidden = !si;
+    $("#mpEntregaVista").hidden = si;
+    $("#mpEditarEntrega").hidden = si;
+  }
+  function refrescarFormEnvio() {
+    $("#feDespachoBox").hidden = tipoEnvio() !== "despacho";
+  }
+  $("#mpEditarEntrega").addEventListener("click", () => {
+    const p = S.pedidos.obtener(pedidoActual);
+    $(`input[name=feTipo][value=${p.entrega.tipo}]`).checked = true;
+    $("#feDireccion").value = p.entrega.direccion || "";
+    $("#feCosto").value = p.entrega.tipo === "despacho" ? p.despacho : CONFIG.costoDespacho;
+    $("#feFecha").value = p.entrega.fecha;
+    $("#feError").hidden = true;
+    // atajo: dirección guardada en la cuenta del cliente
+    const c = S.admin.clientes().find(x => x.id === p.clienteId || x.email === (p.cliente.email || "").toLowerCase());
+    const guardada = c?.direccion ? S.direccion.texto(c.direccion) : "";
+    $("#feUsarGuardada").hidden = !guardada || guardada === p.entrega.direccion;
+    $("#feUsarGuardada").textContent = `📋 Usar la de su cuenta: ${guardada}`;
+    $("#feUsarGuardada").dataset.dir = guardada;
+    refrescarFormEnvio();
+    modoEnvio(true);
+  });
+  $("#feUsarGuardada").addEventListener("click", e => { $("#feDireccion").value = e.currentTarget.dataset.dir; e.currentTarget.hidden = true; });
+  $("#formEntrega").addEventListener("change", refrescarFormEnvio);
+  $("#feCancelar").addEventListener("click", () => modoEnvio(false));
+  $("#formEntrega").addEventListener("submit", e => {
+    e.preventDefault();
+    const tipo = tipoEnvio(), direccion = $("#feDireccion").value.trim(), fecha = $("#feFecha").value;
+    const falta = tipo === "despacho" && !direccion ? "Escribe la dirección de despacho." : !fecha ? "Elige la fecha de entrega." : "";
+    $("#feError").textContent = falta; $("#feError").hidden = !falta;
+    if (falta) return;
+    const antes = S.pedidos.obtener(pedidoActual);
+    const p = S.pedidos.editarEntrega(pedidoActual, { tipo, direccion, fecha, despacho: $("#feCosto").value });
+    pintarModalPedido(); pintar();
+    aviso(p.total !== antes.total ? `Envío actualizado · nuevo total ${clp(p.total)}` : "Envío actualizado");
+  });
 
   $("#mpGuardarEtapa").addEventListener("click", () => {
     const et = $("#mpEtapa").value;
@@ -369,6 +418,7 @@
     $("#npNombre").value = c?.nombre || "";
     $("#npTelefono").value = c?.telefono || "";
     $("#npEmail").value = c?.email || "";
+    $("#npDireccion").value = c?.direccion ? S.direccion.texto(c.direccion) : "";
     const m = c?.mascotas?.[0];
     if (m) npFilas.forEach(f => { if (!f.mascota) f.mascota = m.nombre; });
     pintarFilas();
@@ -499,7 +549,7 @@
     $("#tablaClientes").innerHTML = lista.map(c => `
       <tr>
         <td data-label="Cliente"><div><b>${esc(c.nombre)}</b>${c.demo ? "<small>ejemplo</small>" : ""}</div></td>
-        <td data-label="Contacto"><div>${esc(c.email)}<small>${esc(c.telefono)}</small></div></td>
+        <td data-label="Contacto"><div>${esc(c.email)}<small>${esc(c.telefono)}</small>${c.direccion ? `<small>📍 ${esc(S.direccion.texto(c.direccion))}</small>` : ""}</div></td>
         <td data-label="Peludos"><div>${(c.mascotas || []).map(m => `${m.especie === "gato" ? "🐱" : "🐶"} ${esc(m.nombre)}${m.cumpleanos ? `<small>🎂 ${fechaCorta(m.cumpleanos).slice(0, 5)}</small>` : ""}`).join("<br>") || "<small>—</small>"}</div></td>
         <td data-label="Pedidos" class="num"><div>${c.nPedidos}</div></td>
         <td data-label="Total gastado" class="num"><div>${clp(c.gastado)}</div></td>
@@ -510,8 +560,8 @@
 
   // CSV para el futuro bot / campañas
   $("#exportarCSV").addEventListener("click", () => {
-    const filas = [["nombre", "correo", "whatsapp", "acepta_whatsapp", "acepta_correo", "mascotas", "cumpleanos", "pedidos", "total_gastado", "registrado"]];
-    resumenClientes().forEach(c => filas.push([c.nombre, c.email, c.telefono, c.consentimiento.whatsapp ? "si" : "no", c.consentimiento.email ? "si" : "no",
+    const filas = [["nombre", "correo", "whatsapp", "direccion", "acepta_whatsapp", "acepta_correo", "mascotas", "cumpleanos", "pedidos", "total_gastado", "registrado"]];
+    resumenClientes().forEach(c => filas.push([c.nombre, c.email, c.telefono, S.direccion.texto(c.direccion), c.consentimiento.whatsapp ? "si" : "no", c.consentimiento.email ? "si" : "no",
       (c.mascotas || []).map(m => m.nombre).join(" / "), (c.mascotas || []).map(m => m.cumpleanos || "").join(" / "), c.nPedidos, c.gastado, c.creado.slice(0, 10)]));
     const csv = "﻿" + filas.map(f => f.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
     const a = document.createElement("a");

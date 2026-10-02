@@ -485,6 +485,14 @@
         </div>
         <label class="campo"><span>Contraseña</span><input id="ctClave" type="password" autocomplete="new-password" minlength="6" placeholder="Mínimo 6 caracteres" required></label>
         <fieldset class="campo">
+          <span>Dirección de envío <small class="opcional">(opcional, para despachos)</small></span>
+          <div class="direccion-campos">
+            <input id="ctCalle" type="text" autocomplete="street-address" placeholder="Calle, número, depto">
+            <input id="ctComuna" type="text" autocomplete="address-level2" placeholder="Comuna">
+            <input id="ctReferencia" type="text" placeholder="Referencia (ej: portón verde)" maxlength="60">
+          </div>
+        </fieldset>
+        <fieldset class="campo">
           <span>Tu peludo (opcional)</span>
           <div class="mascota-fila">
             <input id="ctMascota" type="text" placeholder="Nombre">
@@ -521,11 +529,33 @@
         </form>
       </details>
 
-      <h4>Mis datos</h4>
-      <div class="perfil__datos">
+      <div class="perfil__cab">
+        <h4>Mis datos</h4>
+        <button class="btn-texto btn-texto--accion" id="editarDatos" type="button">✏️ Editar</button>
+      </div>
+      <div class="perfil__datos" id="pfDatosVista">
         <div><small>Correo</small><b id="pfEmail"></b></div>
         <div><small>WhatsApp</small><b id="pfTelefono"></b></div>
+        <div class="perfil__direccion"><small>📍 Dirección de envío</small><b id="pfDireccion"></b></div>
       </div>
+      <form class="perfil__editar" id="formDatos" hidden novalidate>
+        <label class="campo"><span>Nombre</span><input id="edNombre" type="text" autocomplete="name"></label>
+        <label class="campo"><span>WhatsApp</span><input id="edTelefono" type="tel" autocomplete="tel"></label>
+        <fieldset class="campo">
+          <span>Dirección de envío</span>
+          <div class="direccion-campos">
+            <input id="edCalle" type="text" autocomplete="street-address" placeholder="Calle, número, depto">
+            <input id="edComuna" type="text" autocomplete="address-level2" placeholder="Comuna">
+            <input id="edReferencia" type="text" placeholder="Referencia (ej: portón verde)" maxlength="60">
+          </div>
+        </fieldset>
+        <p class="letra-chica">El correo no se puede cambiar porque es tu usuario para entrar.</p>
+        <p class="error" id="edError" hidden></p>
+        <div class="perfil__editar-botones">
+          <button class="btn btn--secundario" type="button" id="cancelarDatos">Cancelar</button>
+          <button class="btn btn--primario" type="submit">Guardar</button>
+        </div>
+      </form>
 
       <h4>Avisos</h4>
       <label class="check"><input type="checkbox" id="pfOkWhatsapp"><span>Recordatorios y estado de pedidos por WhatsApp</span></label>

@@ -246,3 +246,14 @@
 .np-items { grid-template-columns: minmax(0, 1fr); }
 .np-item { grid-template-columns: minmax(0, 1fr); min-width: 0; }
 .np-item__fila > * { min-width: 0; }
+
+/* ---------- Envío en el detalle del pedido ---------- */
+.mp-bloque__cab { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.btn-texto--accion { color: var(--rosa-osc); text-decoration: none; font-weight: 800; }
+.mp-editado { color: var(--cafe-2); }
+.form-entrega { padding-top: 4px; }
+.form-entrega .opciones { margin-bottom: 12px; }
+.form-entrega .campo { margin-bottom: 10px; }
+.form-entrega input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #E6D8CC; background: var(--crema); font: inherit; color: var(--cafe); }
+.fe-usar { display: block; margin: -4px 0 10px; text-align: left; overflow-wrap: anywhere; }
+.form-entrega__botones { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }

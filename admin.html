@@ -329,6 +329,30 @@
           <p id="mpCliente"></p>
         </div>
         <div class="mp-bloque">
+          <div class="mp-bloque__cab">
+            <h4>🚚 Envío</h4>
+            <button class="btn-texto btn-texto--chico btn-texto--accion" type="button" id="mpEditarEntrega">✏️ Editar</button>
+          </div>
+          <p id="mpEntregaVista"></p>
+          <form id="formEntrega" class="form-entrega" hidden novalidate>
+            <div class="opciones">
+              <label class="opcion"><input type="radio" name="feTipo" value="retiro"><span>🏠 Retiro</span></label>
+              <label class="opcion"><input type="radio" name="feTipo" value="despacho"><span>🚚 Despacho</span></label>
+            </div>
+            <div id="feDespachoBox">
+              <label class="campo"><span>Dirección de despacho</span><input id="feDireccion" type="text" autocomplete="off"></label>
+              <button type="button" class="btn-texto btn-texto--chico btn-texto--accion fe-usar" id="feUsarGuardada" hidden></button>
+              <label class="campo"><span>Costo de despacho (CLP)</span><input id="feCosto" type="number" min="0" step="100"></label>
+            </div>
+            <label class="campo"><span>Fecha de entrega</span><input id="feFecha" type="date"></label>
+            <p class="error" id="feError" hidden></p>
+            <div class="form-entrega__botones">
+              <button type="button" class="btn btn--secundario btn--chico" id="feCancelar">Cancelar</button>
+              <button type="submit" class="btn btn--primario btn--chico">Guardar envío</button>
+            </div>
+          </form>
+        </div>
+        <div class="mp-bloque">
           <h4>Productos</h4>
           <ul class="resumen__items" id="mpItems"></ul>
           <div class="carrito__linea carrito__linea--total"><span>Total</span><span id="mpTotal"></span></div>
