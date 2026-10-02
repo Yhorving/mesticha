@@ -52,15 +52,15 @@
     $("#panel").hidden = false;
     ir(location.hash.slice(1) || "dashboard");
   }
-  $("#formAdmin").addEventListener("submit", e => {
+  $("#formAdmin").addEventListener("submit", async e => {
     e.preventDefault();
-    if (S.admin.entrar($("#admClave").value)) entrar();
+    if (await S.admin.entrar($("#admEmail").value, $("#admClave").value)) entrar();
     else { $("#admError").hidden = false; $("#admClave").select(); }
   });
   $("#admSalir").addEventListener("click", () => { S.admin.salir(); location.hash = ""; location.reload(); });
 
   // ---------- Navegación ----------
-  const TITULOS = { dashboard: "Dashboard", pedidos: "Pedidos", clientes: "Clientes", productos: "Productos" };
+  const TITULOS = { dashboard: "Dashboard", pedidos: "Pedidos", clientes: "Clientes", productos: "Productos", config: "Configuración" };
   function ir(vista) {
     if (!TITULOS[vista]) vista = "dashboard";
     $$(".vista").forEach(v => v.hidden = v.dataset.vista !== vista);
@@ -74,7 +74,7 @@
   function pintar(vista = $$(".vista").find(v => !v.hidden)?.dataset.vista) {
     const activos = S.pedidos.todos().filter(activo).length;
     $("#badgePedidos").textContent = activos; $("#badgePedidos").hidden = !activos;
-    ({ dashboard: pintarDashboard, pedidos: pintarPedidos, clientes: pintarClientes, productos: pintarProductos })[vista]?.();
+    ({ dashboard: pintarDashboard, pedidos: pintarPedidos, clientes: pintarClientes, productos: pintarProductos, config: pintarConfig })[vista]?.();
   }
 
   // ======================= DASHBOARD =======================
@@ -530,6 +530,85 @@
     cerrarModal();
     pintarProductos();
     aviso(editando ? "Producto actualizado" : "Producto creado · ya aparece en la tienda");
+  });
+
+  // ======================= CONFIGURACIÓN =======================
+  // WhatsApp: acepta "+56 9 4083 2214", "940832214" o "56940832214"
+  const normalizarWA = t => {
+    let d = String(t).replace(/\D/g, "");
+    if (d.length === 8) d = "569" + d;
+    if (d.length === 9 && d[0] === "9") d = "56" + d;
+    return d;
+  };
+  const verWA = d => d.length === 11 ? `+${d.slice(0, 2)} ${d[2]} ${d.slice(3, 7)} ${d.slice(7)}` : d;
+  const emailValido = e => !e || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+
+  function pintarConfig() {
+    const c = S.config.valores(), t = c.transferencia;
+    $("#cfWhatsapp").value = verWA(c.whatsapp || "");
+    $("#cfInstagram").value = c.instagram || "";
+    $("#cfCorreoContacto").value = c.correoContacto || "";
+    $("#cfCorreoAvisos").value = c.correoAvisos || "";
+    $("#cfDias").value = c.diasAnticipacion;
+    $("#cfDespacho").value = c.costoDespacho;
+    $("#cfZona").value = c.zonaDespacho || "";
+    $("#cfTitular").value = t.titular; $("#cfRut").value = t.rut; $("#cfBanco").value = t.banco;
+    $("#cfTipo").value = t.tipoCuenta; $("#cfNumero").value = t.numero; $("#cfCorreoPagos").value = t.email;
+    actualizarProbarWA();
+    $("#cfError").hidden = true;
+    S.admin.correoActual().then(e => { $("#acEmail").value = e; });
+    ["#acNueva", "#acRepite", "#acActual"].forEach(s => { $(s).value = ""; });
+    $("#acError").hidden = true;
+  }
+  function actualizarProbarWA() {
+    const d = normalizarWA($("#cfWhatsapp").value);
+    $("#cfProbarWA").href = `https://wa.me/${d}?text=${encodeURIComponent("Prueba desde el panel de MestiCha 🐾")}`;
+    $("#cfProbarWA").hidden = d.length !== 11;
+  }
+  $("#cfWhatsapp").addEventListener("input", actualizarProbarWA);
+
+  $("#formConfig").addEventListener("submit", e => {
+    e.preventDefault();
+    const wa = normalizarWA($("#cfWhatsapp").value);
+    const d = {
+      whatsapp: wa,
+      instagram: $("#cfInstagram").value.trim(),
+      correoContacto: $("#cfCorreoContacto").value.trim(),
+      correoAvisos: $("#cfCorreoAvisos").value.trim(),
+      diasAnticipacion: Math.max(0, Math.round(+$("#cfDias").value || 0)),
+      costoDespacho: Math.max(0, Math.round(+$("#cfDespacho").value || 0)),
+      zonaDespacho: $("#cfZona").value.trim(),
+      transferencia: {
+        titular: $("#cfTitular").value.trim(), rut: $("#cfRut").value.trim(), banco: $("#cfBanco").value.trim(),
+        tipoCuenta: $("#cfTipo").value.trim(), numero: $("#cfNumero").value.trim(), email: $("#cfCorreoPagos").value.trim(),
+      },
+    };
+    const falta = wa && wa.length !== 11 ? "El WhatsApp debe ser un celular chileno, ej: +56 9 4083 2214." :
+      ![d.correoContacto, d.correoAvisos, d.transferencia.email].every(emailValido) ? "Revisa los correos." :
+      d.instagram && !/^https?:\/\//.test(d.instagram) ? "El Instagram debe ser un link (https://…)." : "";
+    $("#cfError").textContent = falta; $("#cfError").hidden = !falta;
+    if (falta) return;
+    S.config.guardar(d);
+    pintarConfig();
+    aviso("Configuración guardada · la web ya usa los datos nuevos");
+  });
+
+  $("#formAcceso").addEventListener("submit", async e => {
+    e.preventDefault();
+    const email = $("#acEmail").value.trim(), nueva = $("#acNueva").value, actual = $("#acActual").value;
+    const falta = !emailValido(email) || !email ? "Revisa el correo." :
+      nueva && nueva.length < 8 ? "La nueva contraseña debe tener al menos 8 caracteres." :
+      nueva !== $("#acRepite").value ? "Las contraseñas nuevas no coinciden." :
+      !actual ? "Escribe tu contraseña actual para confirmar." : "";
+    $("#acError").textContent = falta; $("#acError").hidden = !falta;
+    if (falta) return;
+    try {
+      await S.admin.cambiarAcceso({ claveActual: actual, email, claveNueva: nueva });
+      pintarConfig();
+      aviso(nueva ? "Acceso actualizado · usa la nueva contraseña la próxima vez" : "Correo de acceso actualizado");
+    } catch (err) {
+      $("#acError").textContent = err.message; $("#acError").hidden = false;
+    }
   });
 
   // ---------- Inicio ----------

@@ -20,9 +20,11 @@ Se abre con doble clic en `index.html`; no necesita instalar nada.
 
 ## Datos que hay que confirmar con MestiCha
 
-Todo está en `js/datos.js` (y marcado con `CONFIRMAR` en el código):
+Los valores por defecto están en `js/datos.js` (marcados con `CONFIRMAR`). WhatsApp, correos,
+Instagram, despacho y datos de transferencia también se editan desde el panel → **Configuración**:
 
-- [ ] **Número de WhatsApp** (`CONFIG.whatsapp`). Sin él, los botones abren el QR del Instagram.
+- [x] **Número de WhatsApp**: +56 9 4083 2214 (se cambia en el panel → Configuración).
+- [ ] Correo de contacto y correo para avisos de pedidos (panel → Configuración).
 - [ ] **Precios** de cada producto. Los actuales son de ejemplo. Repetirlos en el JSON-LD de `index.html`.
 - [ ] Días de anticipación, costo y zona de despacho.
 - [ ] Datos bancarios para transferencia.
@@ -45,8 +47,10 @@ Todo está en `js/datos.js` (y marcado con `CONFIRMAR` en el código):
    Se integra con una función serverless (`/api/pagos`) + webhook que marca el pedido como pagado.
    Las llaves secretas van en el servidor, nunca en el navegador.
 4. **Avisos al negocio**: correo/WhatsApp a MestiCha por cada pedido nuevo.
-5. **Panel admin real**: login con usuario y rol "admin" en Supabase (hoy es una clave de demo
-   visible en el código). Las fotos de productos van a Supabase Storage. Cada cambio de etapa
+5. **Panel admin real**: login con usuario y rol "admin" en Supabase Auth (hoy el acceso de demo
+   es `admin@mesticha.cl` / `mesticha2026` y se cambia en Configuración → Seguridad). Ahí mismo
+   queda reservada la **verificación en dos pasos**: código por correo al iniciar sesión, opción de
+   app de autenticación (TOTP, que Supabase trae) y cierre de sesión por inactividad. Las fotos de productos van a Supabase Storage. Cada cambio de etapa
    dispara el aviso automático al cliente.
 6. **Importante en la demo**: como todo vive en el navegador, el panel sólo ve los pedidos
    hechos en ese mismo navegador. Con el backend, todos los pedidos llegan al panel.

@@ -231,17 +231,57 @@ const Servicios = (() => {
     },
   };
 
+  // ---------------- Configuración de la tienda (editable desde el panel) ----------------
+  // Se guarda aparte y se aplica sobre CONFIG de datos.js al cargar cualquier página.
+  const K_CONFIG = "mesticha-config";
+  const EDITABLES = ["whatsapp", "instagram", "correoContacto", "correoAvisos", "diasAnticipacion", "costoDespacho", "zonaDespacho", "transferencia"];
+  function aplicarConfig(c) {
+    if (!c) return;
+    EDITABLES.forEach(k => {
+      if (c[k] === undefined) return;
+      if (k === "transferencia") Object.assign(CONFIG.transferencia, c.transferencia);
+      else CONFIG[k] = c[k];
+    });
+  }
+  aplicarConfig(leer(K_CONFIG, null));
+
+  const config = {
+    valores: () => CONFIG,
+    guardar(cambios) {
+      const actual = leer(K_CONFIG, {});
+      const nuevo = { ...actual, ...cambios, transferencia: { ...(actual.transferencia || {}), ...(cambios.transferencia || {}) } };
+      escribir(K_CONFIG, nuevo);
+      aplicarConfig(nuevo);
+    },
+    restaurar() { localStorage.removeItem(K_CONFIG); },
+  };
+
   // ---------------- Administración ----------------
-  // DEMO: clave simple en datos.js. En producción: usuarios con rol "admin" en Supabase.
+  // DEMO: correo y clave guardados en este navegador (la inicial viene de datos.js).
+  // En producción: Supabase Auth con rol "admin" + verificación en dos pasos (ver PLAN.md).
   const K_ADMIN = "mesticha-admin";
+  const K_ADMIN_CRED = "mesticha-admin-cred";
+  const credencial = async () => leer(K_ADMIN_CRED, null)
+    || { email: CONFIG.adminEmail, hash: await hashClave(CONFIG.adminEmail, CONFIG.adminClave) };
+
   const admin = {
     sesionActiva: () => sessionStorage.getItem(K_ADMIN) === "1",
-    entrar(clave) {
-      if (clave !== CONFIG.adminClave) return false;
+    async entrar(email, clave) {
+      email = String(email).trim().toLowerCase();
+      const c = await credencial();
+      if (email !== c.email || await hashClave(email, clave) !== c.hash) return false;
       sessionStorage.setItem(K_ADMIN, "1");
       return true;
     },
     salir: () => sessionStorage.removeItem(K_ADMIN),
+    correoActual: async () => (await credencial()).email,
+    async cambiarAcceso({ claveActual, email, claveNueva }) {
+      const c = await credencial();
+      if (await hashClave(c.email, claveActual) !== c.hash) throw new Error("La contraseña actual no es correcta.");
+      email = String(email || c.email).trim().toLowerCase();
+      const clave = claveNueva || claveActual;
+      escribir(K_ADMIN_CRED, { email, hash: await hashClave(email, clave), cambiado: ahora() });
+    },
 
     clientes: () => cuentas().map(sinClave),
 
@@ -327,5 +367,5 @@ const Servicios = (() => {
     },
   };
 
-  return { cuenta, pedidos, pagos, productos, admin };
+  return { cuenta, pedidos, pagos, productos, admin, config };
 })();

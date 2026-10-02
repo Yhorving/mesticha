@@ -11,6 +11,8 @@
   $("#linkInstagram").href = CONFIG.instagram;
   $("#footerInstagram").href = CONFIG.instagram;
   $("#footerWhatsapp").href = linkWhatsapp;
+  if (CONFIG.whatsapp.length === 11) $("#footerWhatsapp").textContent = `WhatsApp +${CONFIG.whatsapp.slice(0, 2)} ${CONFIG.whatsapp[2]} ${CONFIG.whatsapp.slice(3, 7)} ${CONFIG.whatsapp.slice(7)}`;
+  if (CONFIG.correoContacto) Object.assign($("#footerCorreo"), { href: `mailto:${CONFIG.correoContacto}`, textContent: CONFIG.correoContacto, hidden: false });
   $("#anio").textContent = new Date().getFullYear();
   $("#avisoAnticipacion").textContent = `🗓️ Las tortas se preparan a pedido: haz tu pedido con al menos ${CONFIG.diasAnticipacion} días de anticipación.`;
   $("#faqAnticipacion").textContent = `Para tortas, al menos ${CONFIG.diasAnticipacion} días antes. Para galletas y pupcakes, consúltanos: muchas veces tenemos listas.`;

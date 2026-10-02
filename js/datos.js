@@ -4,18 +4,22 @@
 //  con MestiCha antes de publicar.
 // ============================================================
 
+// Valores por defecto. Desde el panel (admin.html → Configuración) se pueden
+// cambiar sin tocar este archivo; esos cambios tienen prioridad.
 const CONFIG = {
-  // Número de WhatsApp en formato internacional, sin "+" ni espacios.
-  // Ej: "56912345678". CONFIRMAR. Mientras esté vacío, el pedido se
-  // copia al portapapeles y se abre el QR de WhatsApp del Instagram.
-  whatsapp: "",
+  // WhatsApp en formato internacional, sin "+" ni espacios (+56 9 4083 2214).
+  // Si quedara vacío, el pedido se copia al portapapeles y se abre el QR de Instagram.
+  whatsapp: "56940832214",
   whatsappQR: "https://wa.me/qr/NNGG34T3GQTCO1",
   instagram: "https://www.instagram.com/mesticha.cl/",
+  correoContacto: "",           // se muestra en el pie de la web. CONFIRMAR
+  correoAvisos: "",             // adonde llegarán los avisos de pedidos nuevos (con backend). CONFIRMAR
   diasAnticipacion: 3,          // CONFIRMAR
   costoDespacho: 3500,          // CONFIRMAR (0 = a convenir)
   zonaDespacho: "Santiago",     // CONFIRMAR
-  // Clave del panel admin.html. SÓLO DEMO: está a la vista en el código.
-  // En producción el acceso será con usuario y rol de administrador.
+  // Acceso inicial al panel admin.html. SÓLO DEMO: está a la vista en el código.
+  // Se cambia en Configuración → Seguridad. En producción: Supabase Auth.
+  adminEmail: "admin@mesticha.cl",
   adminClave: "mesticha2026",
   // Datos para pago por transferencia. CONFIRMAR todos.
   transferencia: {

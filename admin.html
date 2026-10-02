@@ -21,10 +21,11 @@
     <img src="img/logo.png" alt="MestiCha Pet Bakery" width="96" height="96">
     <h1>Panel MestiCha</h1>
     <p>Pedidos, clientes y productos en un solo lugar.</p>
-    <label class="campo"><span>Clave de administrador</span><input id="admClave" type="password" autocomplete="current-password" autofocus></label>
-    <p class="error" id="admError" hidden>Clave incorrecta.</p>
+    <label class="campo"><span>Correo</span><input id="admEmail" type="email" autocomplete="username" autofocus></label>
+    <label class="campo"><span>Contraseña</span><input id="admClave" type="password" autocomplete="current-password"></label>
+    <p class="error" id="admError" hidden>Correo o contraseña incorrectos.</p>
     <button class="btn btn--primario btn--ancho" type="submit">Entrar</button>
-    <p class="demo-aviso">🧪 Demo · clave: <b>mesticha2026</b></p>
+    <p class="demo-aviso">🧪 Demo · <b>admin@mesticha.cl</b> / <b>mesticha2026</b><br><small>Cámbiala en Configuración → Seguridad</small></p>
   </form>
 </div>
 
@@ -39,6 +40,7 @@
       <button data-vista="pedidos"><span>📦</span>Pedidos <em class="adm-badge" id="badgePedidos" hidden></em></button>
       <button data-vista="clientes"><span>👥</span>Clientes</button>
       <button data-vista="productos"><span>🧁</span>Productos</button>
+      <button data-vista="config"><span>⚙️</span>Configuración</button>
     </nav>
     <div class="adm-side__pie">
       <a href="index.html" target="_blank" rel="noopener">Ver tienda ↗</a>
@@ -154,6 +156,74 @@
         </div>
       </div>
       <div class="adm-productos" id="gridProductos"></div>
+    </section>
+
+    <!-- ---------- Configuración ---------- -->
+    <section class="vista" data-vista="config" hidden>
+      <form id="formConfig" novalidate>
+        <div class="config-grid">
+          <article class="card">
+            <h3>📱 Contacto</h3>
+            <p class="card__sub">Se usa en los botones de WhatsApp y en el pie de la web.</p>
+            <label class="campo"><span>WhatsApp de la tienda</span><input id="cfWhatsapp" type="tel" placeholder="+56 9 4083 2214"></label>
+            <p class="letra-chica cf-ayuda"><a id="cfProbarWA" target="_blank" rel="noopener">Probar este número ↗</a></p>
+            <label class="campo"><span>Instagram (link)</span><input id="cfInstagram" type="url" placeholder="https://www.instagram.com/mesticha.cl/"></label>
+            <label class="campo"><span>Correo de contacto <small>(se muestra en la web)</small></span><input id="cfCorreoContacto" type="email" placeholder="hola@mesticha.cl"></label>
+            <label class="campo"><span>Correo para avisos de pedidos nuevos</span><input id="cfCorreoAvisos" type="email" placeholder="pedidos@mesticha.cl"></label>
+            <p class="letra-chica">Los avisos automáticos por correo se activan al conectar el backend.</p>
+          </article>
+
+          <article class="card">
+            <h3>🚚 Pedidos y despacho</h3>
+            <p class="card__sub">Afecta el calendario y el total del checkout.</p>
+            <label class="campo"><span>Días de anticipación para pedir</span><input id="cfDias" type="number" min="0" max="30"></label>
+            <label class="campo"><span>Costo de despacho (CLP, 0 = a convenir)</span><input id="cfDespacho" type="number" min="0" step="100"></label>
+            <label class="campo"><span>Zona de despacho</span><input id="cfZona" type="text" placeholder="Santiago"></label>
+          </article>
+
+          <article class="card">
+            <h3>🏦 Datos para transferencia</h3>
+            <p class="card__sub">Se muestran al cliente que paga por transferencia.</p>
+            <label class="campo"><span>Titular</span><input id="cfTitular" type="text"></label>
+            <div class="campo-doble campo-doble--igual">
+              <label class="campo"><span>RUT</span><input id="cfRut" type="text"></label>
+              <label class="campo"><span>Banco</span><input id="cfBanco" type="text"></label>
+            </div>
+            <div class="campo-doble campo-doble--igual">
+              <label class="campo"><span>Tipo de cuenta</span><input id="cfTipo" type="text"></label>
+              <label class="campo"><span>N° de cuenta</span><input id="cfNumero" type="text"></label>
+            </div>
+            <label class="campo"><span>Correo para comprobantes</span><input id="cfCorreoPagos" type="email"></label>
+          </article>
+        </div>
+        <div class="config-pie">
+          <p class="error" id="cfError" hidden></p>
+          <button class="btn btn--primario" type="submit">Guardar cambios</button>
+        </div>
+      </form>
+
+      <h2 class="config-titulo">🔒 Seguridad del panel</h2>
+      <div class="config-grid">
+        <form class="card" id="formAcceso" novalidate>
+          <h3>Correo y contraseña de acceso</h3>
+          <p class="card__sub">Para entrar a este panel.</p>
+          <label class="campo"><span>Correo</span><input id="acEmail" type="email" autocomplete="username"></label>
+          <label class="campo"><span>Nueva contraseña <small>(vacío = no cambiar)</small></span><input id="acNueva" type="password" autocomplete="new-password" minlength="8"></label>
+          <label class="campo"><span>Repite la nueva contraseña</span><input id="acRepite" type="password" autocomplete="new-password"></label>
+          <label class="campo"><span>Contraseña actual <small>(para confirmar)</small></span><input id="acActual" type="password" autocomplete="current-password"></label>
+          <p class="error" id="acError" hidden></p>
+          <button class="btn btn--primario" type="submit">Actualizar acceso</button>
+        </form>
+
+        <article class="card card--proximo">
+          <h3>Verificación en dos pasos <span class="pronto">Próximamente</span></h3>
+          <p class="card__sub">Además de la contraseña, se pedirá un código que llega a tu correo o al celular.</p>
+          <label class="check check--off"><input type="checkbox" disabled><span>Pedir código por correo al iniciar sesión</span></label>
+          <label class="check check--off"><input type="checkbox" disabled><span>Pedir código por SMS / app de autenticación</span></label>
+          <label class="check check--off"><input type="checkbox" disabled><span>Cerrar sesión automáticamente tras 30 min sin uso</span></label>
+          <p class="letra-chica">Se activa al conectar el backend (Supabase Auth). En esta demo el acceso vive en este navegador, así que todavía no es una protección real.</p>
+        </article>
+      </div>
     </section>
   </main>
 </div>
