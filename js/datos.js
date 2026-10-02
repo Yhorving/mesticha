@@ -29,47 +29,19 @@ const CONFIG = {
 };
 
 // Precios en CLP. CONFIRMAR todos.
+// La torta personalizada es UN solo producto: tamaño y decoración se eligen en
+// "Arma su torta" (ver OPCIONES_TORTA). imgs = fotos que se ven en su tarjeta.
 const PRODUCTOS = [
   {
-    id: "torta-mini",
-    nombre: "Mini torta personalizada",
+    id: "torta-personalizada",
+    nombre: "Torta personalizada",
     categoria: "tortas",
     para: ["perro", "gato"],
-    precio: 14990,
+    precio: 14990, // "desde": se calcula con OPCIONES_TORTA
     img: "img/torta-kim.jpg",
-    descripcion: "Torta individual con el nombre y la edad de tu peludo. Ideal para perros pequeños y gatos.",
+    imgs: ["img/torta-kim.jpg", "img/torta-nicky.jpg", "img/torta-louie.jpg", "img/torta-chuck.jpg", "img/torta-kim-caja.jpg"],
+    descripcion: "Con el nombre y la edad de tu peludo. Tú eliges tamaño, decoración y color. Para perros y gatos.",
     etiqueta: "Más pedida",
-    personalizable: true,
-  },
-  {
-    id: "torta-clasica",
-    nombre: "Torta de cumpleaños",
-    categoria: "tortas",
-    para: ["perro"],
-    precio: 19990,
-    img: "img/torta-nicky.jpg",
-    descripcion: "Más grande, decorada con rosetas y su nombre. Para compartir con sus amigos peludos.",
-    personalizable: true,
-  },
-  {
-    id: "torta-tematica",
-    nombre: "Torta con topper de galleta",
-    categoria: "tortas",
-    para: ["perro"],
-    precio: 17990,
-    img: "img/torta-louie.jpg",
-    descripcion: "Letras y hueso de galleta horneada sobre la torta. El nombre se come también.",
-    personalizable: true,
-  },
-  {
-    id: "torta-gato",
-    nombre: "Torta para gatos",
-    categoria: "tortas",
-    para: ["gato"],
-    precio: 14990,
-    img: "img/torta-chuck.jpg",
-    descripcion: "Con carita de gato en galleta, su nombre y su edad. Porque los michis también celebran.",
-    etiqueta: "Michis",
     personalizable: true,
   },
   {
@@ -162,6 +134,19 @@ const TESTIMONIOS = [
     img: "img/story-louie.jpg",
   },
 ];
+
+// Opciones de "Arma su torta". CONFIRMAR precios.
+const OPCIONES_TORTA = {
+  tamanos: [
+    { id: "mini",    nombre: "Mini",    detalle: "Individual · perros pequeños y gatos", precio: 14990 },
+    { id: "clasica", nombre: "Clásica", detalle: "Para compartir con sus amigos",        precio: 19990 },
+  ],
+  decoraciones: [
+    { id: "rosetas", nombre: "Rosetas de crema",  detalle: "Clásica y colorida",           extra: 0,    img: "img/torta-nicky.jpg", icono: "💖" },
+    { id: "topper",  nombre: "Topper de galleta", detalle: "Letras y hueso horneados",     extra: 3000, img: "img/torta-louie.jpg", icono: "🦴" },
+    { id: "michi",   nombre: "Carita de gato",    detalle: "Galleta con forma de michi",   extra: 0,    img: "img/torta-chuck.jpg", icono: "🐱" },
+  ],
+};
 
 const COLORES_DECORACION = [
   { id: "rosado",  nombre: "Rosado",  hex: "#F27A9B" },

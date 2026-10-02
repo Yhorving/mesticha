@@ -371,11 +371,12 @@
         <div class="aprod__foto">
           ${p.img ? `<img src="${esc(p.img)}" alt="">` : ""}
           <span class="aprod__estado">${p.activo === false ? "🙈 Oculto" : "👁 Visible"}</span>
+          ${fotosDe(p).length > 1 ? `<span class="aprod__nfotos">📷 ${fotosDe(p).length}</span>` : ""}
         </div>
         <div class="aprod__cuerpo">
           <h4>${esc(p.nombre)}</h4>
           <div class="aprod__meta">${CATEGORIAS[p.categoria] || p.categoria} · ${p.para.map(x => x === "perro" ? "🐶" : "🐱").join(" ")}${p.personalizable ? " · personalizable" : ""}${p.etiqueta ? ` · “${esc(p.etiqueta)}”` : ""}</div>
-          <div class="aprod__precio">${clp(p.precio)}</div>
+          <div class="aprod__precio">${p.personalizable ? `<small>desde</small> ${clp(desdeTorta())}` : clp(p.precio)}</div>
           <div class="aprod__acciones">
             <button data-editar="${p.id}">✏️ Editar</button>
             <button data-visible="${p.id}">${p.activo === false ? "👁 Mostrar" : "🙈 Ocultar"}</button>
@@ -422,12 +423,14 @@
   });
 
   // ---------- Formulario de producto ----------
-  let editando = null, fotoNueva = null;
+  let editando = null, fotos = [];
+  const fotosDe = p => (p?.imgs && p.imgs.length ? p.imgs : [p?.img]).filter(Boolean);
+  const desdeTorta = () => Math.min(...OPCIONES_TORTA.tamanos.map(t => t.precio));
   $("#nuevoProducto").addEventListener("click", () => abrirProducto(null));
 
   function abrirProducto(id) {
     const p = id ? S.productos.lista().find(x => x.id === id) : null;
-    editando = p; fotoNueva = null;
+    editando = p; fotos = fotosDe(p);
     $("#mprTitulo").textContent = p ? "Editar producto" : "Nuevo producto";
     $("#prNombre").value = p?.nombre || "";
     $("#prCategoria").value = p?.categoria || "tortas";
@@ -440,27 +443,55 @@
     $("#prActivo").checked = p ? p.activo !== false : true;
     $("#prFoto").value = "";
     $("#prError").hidden = true;
-    vistaFoto(p?.img);
+    pintarFotos(); modoPrecio();
     abrirModal("mProducto");
     setTimeout(() => $("#prNombre").focus(), 50);
   }
-  const vistaFoto = src => { $("#prFotoVista").innerHTML = src ? `<img src="${esc(src)}" alt="">` : "<span>📷</span>"; };
 
-  // Reduce la foto a 900 px y la guarda como JPG (en producción se sube a Supabase Storage)
-  $("#prFoto").addEventListener("change", e => {
-    const f = e.target.files[0]; if (!f) return;
+  // Torta personalizada: el precio no se escribe, sale de tamaños + decoraciones
+  function modoPrecio() {
+    const pers = $("#prPersonalizable").checked;
+    $("#prPrecioBox").hidden = pers;
+    $("#prPrecioNota").hidden = !pers;
+  }
+  $("#prPersonalizable").addEventListener("change", modoPrecio);
+
+  function pintarFotos() {
+    $("#prFotos").innerHTML = fotos.length ? fotos.map((src, i) => `
+      <div class="prod-fotos__item${i === 0 ? " principal" : ""}">
+        <button type="button" class="prod-fotos__img" data-principal="${i}" title="${i ? "Hacer principal" : "Foto principal"}"><img src="${esc(src)}" alt=""></button>
+        ${i === 0 ? `<span class="prod-fotos__estrella">⭐</span>` : ""}
+        <button type="button" class="prod-fotos__quitar" data-quitar="${i}" aria-label="Quitar foto">✕</button>
+      </div>`).join("") : `<div class="prod-fotos__vacio">📷<small>Sin fotos</small></div>`;
+  }
+  $("#prFotos").addEventListener("click", e => {
+    const q = e.target.closest("[data-quitar]"), pr = e.target.closest("[data-principal]");
+    if (q) fotos.splice(+q.dataset.quitar, 1);
+    else if (pr && +pr.dataset.principal > 0) fotos.unshift(...fotos.splice(+pr.dataset.principal, 1));
+    else return;
+    pintarFotos();
+  });
+
+  // Reduce cada foto a 900 px y la guarda como JPG (en producción se sube a Supabase Storage)
+  const achicar = f => new Promise((ok, mal) => {
     const img = new Image();
     img.onload = () => {
       const s = Math.min(1, 900 / Math.max(img.width, img.height));
       const c = document.createElement("canvas");
       c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      fotoNueva = c.toDataURL("image/jpeg", .8);
-      vistaFoto(fotoNueva);
       URL.revokeObjectURL(img.src);
+      ok(c.toDataURL("image/jpeg", .8));
     };
-    img.onerror = () => aviso("No pudimos leer esa imagen");
+    img.onerror = mal;
     img.src = URL.createObjectURL(f);
+  });
+  $("#prFoto").addEventListener("change", async e => {
+    for (const f of e.target.files) {
+      try { fotos.push(await achicar(f)); } catch { aviso(`No pudimos leer ${f.name}`); }
+    }
+    e.target.value = "";
+    pintarFotos();
   });
 
   const slug = t => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "producto";
@@ -471,16 +502,17 @@
     const d = {
       nombre: $("#prNombre").value.trim(),
       categoria: $("#prCategoria").value,
-      precio: Math.round(+$("#prPrecio").value),
+      precio: $("#prPersonalizable").checked ? desdeTorta() : Math.round(+$("#prPrecio").value),
       descripcion: $("#prDescripcion").value.trim(),
       etiqueta: $("#prEtiqueta").value.trim() || undefined,
       para,
       personalizable: $("#prPersonalizable").checked,
       activo: $("#prActivo").checked,
-      img: fotoNueva || editando?.img || "",
+      img: fotos[0] || "",
+      imgs: fotos.slice(),
     };
     const falta = !d.nombre ? "Escribe el nombre." : !(d.precio > 0) ? "Indica un precio mayor a 0." :
-      !para.length ? "Marca si es para perros, gatos o ambos." : !d.img ? "Sube una foto del producto." : "";
+      !para.length ? "Marca si es para perros, gatos o ambos." : !fotos.length ? "Sube al menos una foto del producto." : "";
     $("#prError").textContent = falta; $("#prError").hidden = !falta;
     if (falta) return;
     let id = editando?.id;

@@ -2,6 +2,50 @@
    MestiCha · cuenta, checkout y WhatsApp flotante
    ============================================================ */
 
+/* ---------- Carrusel en tarjetas de producto ---------- */
+.carrusel { position: absolute; inset: 0; }
+.carrusel__pista { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.carrusel__pista::-webkit-scrollbar { display: none; }
+.carrusel__pista img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 62%; scroll-snap-align: start; }
+.producto:hover .carrusel__pista img { transform: none; }
+.carrusel__flecha { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: none; background: rgba(255,255,255,.92); color: var(--cafe); font-size: 1.5rem; line-height: 1; display: grid; place-items: center; padding-bottom: 3px; box-shadow: var(--sombra-s); opacity: 0; transition: opacity .2s; }
+.carrusel__flecha--izq { left: 10px; }
+.carrusel__flecha--der { right: 10px; }
+.producto:hover .carrusel__flecha, .carrusel__flecha:focus-visible { opacity: 1; }
+@media (hover: none) { .carrusel__flecha { opacity: .85; width: 32px; height: 32px; } }
+.carrusel__puntos { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; justify-content: center; gap: 6px; }
+.carrusel__puntos button { width: 8px; height: 8px; padding: 0; border-radius: 999px; border: none; background: rgba(255,255,255,.6); box-shadow: 0 0 0 1px rgba(0,0,0,.08); transition: width .25s, background .25s; }
+.carrusel__puntos button.activo { width: 20px; background: var(--blanco); }
+
+/* ---------- Arma su torta: tarjetas de opción ---------- */
+.tarjetas-opcion { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tarjetas-opcion--deco { grid-template-columns: repeat(3, 1fr); }
+.tarjeta-opcion { position: relative; }
+.tarjeta-opcion input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.tarjeta-opcion > span { display: flex; flex-direction: column; gap: 2px; height: 100%; padding: 12px 14px; border: 1.5px solid #EADBD0; border-radius: var(--radio-s); background: var(--crema); cursor: pointer; transition: all .15s; }
+.tarjeta-opcion b { font-size: .95rem; }
+.tarjeta-opcion small { font-size: .78rem; color: var(--cafe-2); line-height: 1.35; }
+.tarjeta-opcion em { font-style: normal; font-weight: 800; font-size: .88rem; margin-top: auto; padding-top: 4px; color: var(--cafe); }
+.tarjeta-opcion--foto > span { padding: 8px 8px 10px; text-align: center; }
+.tarjeta-opcion--foto img { width: 100%; aspect-ratio: 1; object-fit: cover; object-position: 50% 62%; border-radius: 10px; margin-bottom: 6px; }
+.tarjeta-opcion input:checked + span { border-color: var(--rosa); background: var(--rosa-suave); box-shadow: 0 0 0 1px var(--rosa); }
+.tarjeta-opcion input:checked + span em { color: var(--rosa-osc); }
+.tarjeta-opcion input:focus-visible + span { box-shadow: 0 0 0 3px var(--rosa-borde); }
+
+.torta-preview--mini .torta-preview__torta { width: 62%; }
+.personaliza__desglose { margin: 2px 0 0; font-size: .8rem; color: var(--cafe-2); }
+.ejemplo-real { margin: 18px auto 0; display: flex; align-items: center; gap: 12px; background: var(--blanco); border-radius: var(--radio-s); padding: 8px 16px 8px 8px; width: fit-content; max-width: 100%; box-shadow: var(--sombra-s); text-align: left; }
+.ejemplo-real img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; object-position: 50% 62%; transition: opacity .18s; }
+.ejemplo-real img.cambiando { opacity: 0; }
+.ejemplo-real small { display: block; font-size: .72rem; color: var(--cafe-2); text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+.ejemplo-real b { font-size: .95rem; }
+@media (max-width: 600px) {
+  .tarjetas-opcion--deco { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tarjeta-opcion--foto small { display: none; }
+  .tarjeta-opcion--foto b { font-size: .8rem; line-height: 1.2; }
+  .tarjeta-opcion--foto em { font-size: .78rem; }
+}
+
 /* ---------- Cuenta (header) ---------- */
 .btn-cuenta { display: inline-flex; align-items: center; gap: 6px; height: 46px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--cafe); background: transparent; color: var(--cafe); font-weight: 800; font-size: .9rem; }
 .btn-cuenta:hover { background: var(--cafe); color: var(--crema); }

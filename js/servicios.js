@@ -203,7 +203,7 @@ const Servicios = (() => {
   };
 
   // ---------------- Productos (editables desde el panel) ----------------
-  const K_PRODUCTOS = "mesticha-productos";
+  const K_PRODUCTOS = "mesticha-productos-v2"; // v2: una sola torta personalizada
   const ORIGINALES = PRODUCTOS.map(p => ({ ...p, activo: true }));
   const guardados = leer(K_PRODUCTOS, null);
   // La tienda usa el arreglo PRODUCTOS de datos.js: si hay cambios guardados, lo reemplazamos

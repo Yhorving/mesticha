@@ -207,11 +207,11 @@
     <form id="formProducto" novalidate>
       <div class="prod-form">
         <div class="prod-form__foto">
-          <div class="prod-foto" id="prFotoVista"><span>📷</span></div>
+          <div class="prod-fotos" id="prFotos"></div>
           <label class="btn btn--secundario btn--chico btn--ancho">
-            Subir foto <input type="file" id="prFoto" accept="image/*" hidden>
+            ＋ Subir fotos <input type="file" id="prFoto" accept="image/*" multiple hidden>
           </label>
-          <p class="letra-chica">JPG o PNG. Se ajusta sola a 900 px.</p>
+          <p class="letra-chica">Puedes subir varias. La primera ⭐ es la principal; toca otra para hacerla principal.</p>
         </div>
         <div>
           <label class="campo"><span>Nombre</span><input id="prNombre" type="text" maxlength="60" required></label>
@@ -219,7 +219,8 @@
             <label class="campo"><span>Categoría</span>
               <select id="prCategoria"><option value="tortas">Tortas</option><option value="pupcakes">Pupcakes</option><option value="galletas">Galletas</option></select>
             </label>
-            <label class="campo"><span>Precio (CLP)</span><input id="prPrecio" type="number" min="0" step="10" required></label>
+            <label class="campo" id="prPrecioBox"><span>Precio (CLP)</span><input id="prPrecio" type="number" min="0" step="10" required></label>
+            <p class="letra-chica prod-nota" id="prPrecioNota" hidden>💡 El precio de la torta personalizada sale de los tamaños y decoraciones (<code>OPCIONES_TORTA</code> en <code>js/datos.js</code>).</p>
           </div>
           <label class="campo"><span>Descripción</span><textarea id="prDescripcion" rows="3" maxlength="220"></textarea></label>
           <div class="campo-doble campo-doble--igual">

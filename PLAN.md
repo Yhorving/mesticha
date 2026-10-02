@@ -14,6 +14,7 @@ Se abre con doble clic en `index.html`; no necesita instalar nada.
 | Historial de pedidos y seguimiento (recibido → pago → preparando → en camino/listo → entregado) | 🧪 **demo**: avanza solo cada 90 s |
 | Panel `admin.html`: dashboard, pedidos (cambiar etapa, cancelar, avisar por WhatsApp), clientes (exportar CSV), productos (crear, editar, ocultar, eliminar, subir foto) | 🧪 **demo**: clave `mesticha2026`, datos del navegador |
 | Collage del inicio con fotos que van rotando | ✅ (fotos en `HERO_FOTOS` de `js/datos.js`) |
+| Una sola "Torta personalizada" con carrusel de fotos; tamaño y decoración se eligen en "Arma su torta" | ✅ (opciones y precios en `OPCIONES_TORTA` de `js/datos.js`) |
 | Botón flotante de WhatsApp | ✅ (falta el número, ver abajo) |
 | SEO: título/descripción, Open Graph, JSON-LD `Bakery`, sitemap, robots | ✅ (falta dominio definitivo) |
 

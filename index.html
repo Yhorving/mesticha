@@ -53,10 +53,7 @@
       "@type": "OfferCatalog",
       "name": "Productos para mascotas",
       "itemListElement": [
-        { "@type": "Offer", "price": "14990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "itemOffered": { "@type": "Product", "name": "Mini torta personalizada para perros y gatos", "image": "https://mesticha.cl/img/torta-kim.jpg" } },
-        { "@type": "Offer", "price": "19990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "itemOffered": { "@type": "Product", "name": "Torta de cumpleaños para perros", "image": "https://mesticha.cl/img/torta-nicky.jpg" } },
-        { "@type": "Offer", "price": "17990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "itemOffered": { "@type": "Product", "name": "Torta para perros con topper de galleta", "image": "https://mesticha.cl/img/torta-louie.jpg" } },
-        { "@type": "Offer", "price": "14990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "itemOffered": { "@type": "Product", "name": "Torta de cumpleaños para gatos", "image": "https://mesticha.cl/img/torta-chuck.jpg" } },
+        { "@type": "AggregateOffer", "lowPrice": "14990", "highPrice": "22990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "itemOffered": { "@type": "Product", "name": "Torta de cumpleaños personalizada para perros y gatos", "image": ["https://mesticha.cl/img/torta-kim.jpg", "https://mesticha.cl/img/torta-nicky.jpg", "https://mesticha.cl/img/torta-louie.jpg", "https://mesticha.cl/img/torta-chuck.jpg"] } },
         { "@type": "Offer", "price": "5990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "itemOffered": { "@type": "Product", "name": "Pupcake para mascotas", "image": "https://mesticha.cl/img/pupcake.jpg" } },
         { "@type": "Offer", "price": "4990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "itemOffered": { "@type": "Product", "name": "Galletas para perros con forma de hueso", "image": "https://mesticha.cl/img/galletas-packs.jpg" } },
         { "@type": "Offer", "price": "6990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "itemOffered": { "@type": "Product", "name": "Galletas surtidas para perros y gatos", "image": "https://mesticha.cl/img/galletas-surtidas.jpg" } }
@@ -167,27 +164,36 @@
         <div class="torta-preview__torta">
           <div class="torta-preview__borde" id="previewBorde"></div>
           <div class="torta-preview__cara">
-            <span class="torta-preview__icono" id="previewIcono">🦴</span>
+            <span class="torta-preview__icono" id="previewIcono">💖</span>
             <span class="torta-preview__nombre" id="previewNombre">Tu peludo</span>
             <span class="torta-preview__edad" id="previewEdad">1</span>
           </div>
         </div>
       </div>
       <p class="personaliza__nota">Vista referencial. La decoración final es hecha a mano 💕</p>
+      <figure class="ejemplo-real">
+        <img id="ejemploImg" src="img/torta-nicky.jpg" alt="" loading="lazy">
+        <figcaption><small>Ejemplo real</small><b id="ejemploTexto">Rosetas de crema</b></figcaption>
+      </figure>
     </div>
 
     <form class="personaliza__form" id="formTorta" novalidate>
       <p class="sobretitulo">Arma su torta</p>
-      <h2>Diséñala en 4 pasos</h2>
+      <h2>Diséñala a su gusto</h2>
 
-      <label class="campo">
-        <span>1 · ¿Qué torta?</span>
-        <select id="tortaTipo" required></select>
-      </label>
+      <fieldset class="campo">
+        <span>1 · Tamaño</span>
+        <div class="tarjetas-opcion" id="tamanos"></div>
+      </fieldset>
+
+      <fieldset class="campo">
+        <span>2 · Decoración</span>
+        <div class="tarjetas-opcion tarjetas-opcion--deco" id="decoraciones"></div>
+      </fieldset>
 
       <div class="campo-doble">
         <label class="campo">
-          <span>2 · Nombre</span>
+          <span>3 · Nombre</span>
           <input id="tortaNombre" type="text" maxlength="12" placeholder="Ej: Kim" required>
         </label>
         <label class="campo">
@@ -197,7 +203,7 @@
       </div>
 
       <fieldset class="campo">
-        <span>3 · Es para un…</span>
+        <span>4 · Es para un…</span>
         <div class="opciones">
           <label class="opcion"><input type="radio" name="especie" value="perro" checked><span>🐶 Perro</span></label>
           <label class="opcion"><input type="radio" name="especie" value="gato"><span>🐱 Gato</span></label>
@@ -205,7 +211,7 @@
       </fieldset>
 
       <fieldset class="campo">
-        <span>4 · Color de decoración</span>
+        <span>5 · Color de decoración</span>
         <div class="colores" id="colores"></div>
       </fieldset>
 
@@ -215,7 +221,10 @@
       </label>
 
       <div class="personaliza__pie">
-        <p class="personaliza__precio" id="tortaPrecio"></p>
+        <div>
+          <p class="personaliza__precio" id="tortaPrecio"></p>
+          <p class="personaliza__desglose" id="tortaDesglose"></p>
+        </div>
         <button type="submit" class="btn btn--primario">Agregar al carrito</button>
       </div>
       <p class="error" id="tortaError" hidden>Escribe el nombre de tu peludo 🐾</p>

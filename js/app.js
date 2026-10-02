@@ -28,13 +28,28 @@
 
   // ---------- Tienda ----------
   const grid = $("#productos");
+  const fotosDe = p => (p.imgs && p.imgs.length ? p.imgs : [p.img]).filter(Boolean);
+  const desde = p => p.personalizable ? Math.min(...OPCIONES_TORTA.tamanos.map(t => t.precio)) : p.precio;
+
+  function fotoProducto(p) {
+    const fotos = fotosDe(p);
+    if (fotos.length < 2) return `<img src="${esc(fotos[0] || "")}" alt="${esc(p.nombre)}" loading="lazy">`;
+    return `
+      <div class="carrusel" data-carrusel>
+        <div class="carrusel__pista">${fotos.map((src, i) => `<img src="${esc(src)}" alt="${esc(p.nombre)} · foto ${i + 1}" loading="lazy">`).join("")}</div>
+        <button class="carrusel__flecha carrusel__flecha--izq" data-dir="-1" aria-label="Foto anterior">‹</button>
+        <button class="carrusel__flecha carrusel__flecha--der" data-dir="1" aria-label="Foto siguiente">›</button>
+        <div class="carrusel__puntos">${fotos.map((_, i) => `<button data-ir="${i}" aria-label="Ver foto ${i + 1}" class="${i ? "" : "activo"}"></button>`).join("")}</div>
+      </div>`;
+  }
+
   function pintarProductos(filtro = "todos") {
     const lista = PRODUCTOS.filter(p => p.activo !== false && (
       filtro === "todos" || p.categoria === filtro || p.para.includes(filtro)));
     grid.innerHTML = lista.map((p, i) => `
       <article class="producto" style="animation-delay:${i * 50}ms">
         <div class="producto__foto">
-          <img src="${p.img}" alt="${esc(p.nombre)}" loading="lazy">
+          ${fotoProducto(p)}
           ${p.etiqueta ? `<span class="producto__etiqueta">${esc(p.etiqueta)}</span>` : ""}
           <span class="producto__para" title="Apto para">${p.para.map(x => x === "perro" ? "🐶" : "🐱").join(" ")}</span>
         </div>
@@ -42,7 +57,7 @@
           <h3>${esc(p.nombre)}</h3>
           <p>${esc(p.descripcion)}</p>
           <div class="producto__pie">
-            <span class="precio">${p.personalizable ? "<small>desde</small>" : ""}${clp(p.precio)}</span>
+            <span class="precio">${p.personalizable ? "<small>desde</small>" : ""}${clp(desde(p))}</span>
             ${p.personalizable
               ? `<button class="btn btn--primario" data-personalizar="${p.id}">Personalizar</button>`
               : `<button class="btn btn--primario" data-agregar="${p.id}">Agregar</button>`}
@@ -59,19 +74,39 @@
     pintarProductos(b.dataset.filtro);
   });
 
+  // Carrusel de fotos de una tarjeta: flechas, puntos, deslizar con el dedo y avance solo
+  function irAFoto(car, i) {
+    const pista = $(".carrusel__pista", car);
+    const n = pista.children.length;
+    pista.scrollTo({ left: ((i + n) % n) * pista.clientWidth, behavior: "smooth" });
+  }
+  const fotoActual = car => { const p = $(".carrusel__pista", car); return Math.round(p.scrollLeft / p.clientWidth); };
+  grid.addEventListener("scroll", e => {
+    if (!e.target.classList?.contains("carrusel__pista")) return;
+    const car = e.target.closest("[data-carrusel]"), i = fotoActual(car);
+    $$(".carrusel__puntos button", car).forEach((b, k) => b.classList.toggle("activo", k === i));
+  }, true);
+
   grid.addEventListener("click", e => {
+    const car = e.target.closest("[data-carrusel]");
+    const flecha = e.target.closest("[data-dir]"), punto = e.target.closest("[data-ir]");
+    if (car && flecha) { irAFoto(car, fotoActual(car) + +flecha.dataset.dir); return; }
+    if (car && punto) { irAFoto(car, +punto.dataset.ir); return; }
     const add = e.target.closest("[data-agregar]");
     const per = e.target.closest("[data-personalizar]");
     if (add) agregar({ id: add.dataset.agregar });
     if (per) {
-      selTipo.value = per.dataset.personalizar;
-      const p = porId(per.dataset.personalizar);
-      if (p.para.length === 1) $(`input[name=especie][value=${p.para[0]}]`).checked = true;
-      actualizarPreview();
       $("#personaliza").scrollIntoView({ behavior: "smooth" });
       setTimeout(() => $("#tortaNombre").focus({ preventScroll: true }), 600);
     }
   });
+
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    setInterval(() => {
+      if (document.hidden) return;
+      $$("[data-carrusel]", grid).forEach(car => { if (!car.matches(":hover")) irAFoto(car, fotoActual(car) + 1); });
+    }, 4500);
+  }
 
   // ---------- Collage del inicio: fotos que van rotando ----------
   const slots = $$("[data-hero]").map(fig => ({ fig, fotos: HERO_FOTOS[fig.dataset.hero] || [], i: 0 }));
@@ -121,9 +156,20 @@
     </article>`).join("");
 
   // ---------- Personalizador ----------
-  const selTipo = $("#tortaTipo");
-  selTipo.innerHTML = PRODUCTOS.filter(p => p.personalizable && p.activo !== false)
-    .map(p => `<option value="${p.id}">${esc(p.nombre)} · ${clp(p.precio)}</option>`).join("");
+  const TORTA = () => PRODUCTOS.find(p => p.personalizable && p.activo !== false);
+  const { tamanos, decoraciones } = OPCIONES_TORTA;
+
+  $("#tamanos").innerHTML = tamanos.map((t, i) => `
+    <label class="tarjeta-opcion">
+      <input type="radio" name="tamano" value="${t.id}" ${i === 0 ? "checked" : ""}>
+      <span><b>${esc(t.nombre)}</b><small>${esc(t.detalle)}</small><em>${clp(t.precio)}</em></span>
+    </label>`).join("");
+
+  $("#decoraciones").innerHTML = decoraciones.map((d, i) => `
+    <label class="tarjeta-opcion tarjeta-opcion--foto">
+      <input type="radio" name="decoracion" value="${d.id}" ${i === 0 ? "checked" : ""}>
+      <span><img src="${d.img}" alt="" loading="lazy"><b>${esc(d.nombre)}</b><small>${esc(d.detalle)}</small><em>${d.extra ? "+" + clp(d.extra) : "Incluida"}</em></span>
+    </label>`).join("");
 
   $("#colores").innerHTML = COLORES_DECORACION.map((c, i) => `
     <label class="color" title="${c.nombre}">
@@ -141,23 +187,36 @@
 
   const preview = $("#tortaPreview");
   function datosTorta() {
-    const color = COLORES_DECORACION.find(c => c.id === $("input[name=color]:checked").value);
+    const valor = n => $(`input[name=${n}]:checked`).value;
+    const tamano = tamanos.find(t => t.id === valor("tamano"));
+    const deco = decoraciones.find(d => d.id === valor("decoracion"));
     return {
-      id: selTipo.value,
+      tamano, deco,
+      precio: tamano.precio + deco.extra,
       nombre: $("#tortaNombre").value.trim(),
       edad: $("#tortaEdad").value.trim(),
-      especie: $("input[name=especie]:checked").value,
-      color,
+      especie: valor("especie"),
+      color: COLORES_DECORACION.find(c => c.id === valor("color")),
       nota: $("#tortaNota").value.trim(),
     };
   }
+
+  let ultimaDeco = null;
   function actualizarPreview() {
     const d = datosTorta();
     preview.style.setProperty("--color", d.color.hex);
+    preview.classList.toggle("torta-preview--mini", d.tamano.id === "mini");
     $("#previewNombre").textContent = d.nombre || "Tu peludo";
     $("#previewEdad").textContent = d.edad || "";
-    $("#previewIcono").textContent = d.especie === "gato" ? "🐱" : "🦴";
-    $("#tortaPrecio").textContent = clp(porId(d.id).precio);
+    $("#previewIcono").textContent = d.deco.icono;
+    $("#tortaPrecio").textContent = clp(d.precio);
+    $("#tortaDesglose").textContent = `${d.tamano.nombre} ${clp(d.tamano.precio)}${d.deco.extra ? ` + ${d.deco.nombre.toLowerCase()} ${clp(d.deco.extra)}` : ""}`;
+    if (ultimaDeco !== d.deco.id) {
+      ultimaDeco = d.deco.id;
+      const img = $("#ejemploImg");
+      img.classList.add("cambiando");
+      setTimeout(() => { img.src = d.deco.img; $("#ejemploTexto").textContent = d.deco.nombre; img.classList.remove("cambiando"); }, 180);
+    }
     $("#tortaError").hidden = true;
   }
   $("#formTorta").addEventListener("input", actualizarPreview);
@@ -167,14 +226,17 @@
   $("#formTorta").addEventListener("submit", e => {
     e.preventDefault();
     const d = datosTorta();
+    const torta = TORTA();
+    if (!torta) { aviso("Las tortas no están disponibles por ahora"); return; }
     if (!d.nombre) { $("#tortaError").hidden = false; $("#tortaNombre").focus(); return; }
     const detalle = [
+      `${d.tamano.nombre} · ${d.deco.nombre}`,
       `Para: ${d.nombre}${d.edad ? ` (${d.edad} ${d.edad === "1" ? "año" : "años"})` : ""}`,
       d.especie === "gato" ? "Gato" : "Perro",
       `Color ${d.color.nombre.toLowerCase()}`,
       d.nota && `Nota: ${d.nota}`,
     ].filter(Boolean).join(" · ");
-    agregar({ id: d.id, detalle });
+    agregar({ id: torta.id, detalle, precio: d.precio });
     e.target.reset();
     actualizarPreview();
   });
@@ -186,20 +248,21 @@
   carrito = carrito.filter(it => porId(it.id));
   const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(carrito)); } catch {} };
 
-  function agregar({ id, detalle = "" }) {
+  function agregar({ id, detalle = "", precio }) {
     const existente = carrito.find(it => it.id === id && it.detalle === detalle);
     if (existente) existente.cant++;
-    else carrito.push({ id, detalle, cant: 1 });
+    else carrito.push({ id, detalle, cant: 1, ...(precio ? { precio } : {}) });
     guardar(); pintarCarrito();
     const n = $("#contadorCarrito");
     n.classList.remove("pop"); void n.offsetWidth; n.classList.add("pop");
     aviso(`${porId(id).nombre} agregado al carrito 🐾`);
   }
 
-  const subtotal = () => carrito.reduce((s, it) => s + porId(it.id).precio * it.cant, 0);
+  const precioItem = it => it.precio ?? porId(it.id).precio;
+  const subtotal = () => carrito.reduce((s, it) => s + precioItem(it) * it.cant, 0);
   const textoItems = () => carrito.map(it => {
     const p = porId(it.id);
-    return `• ${it.cant} x ${p.nombre} — ${clp(p.precio * it.cant)}${it.detalle ? `\n   ${it.detalle}` : ""}`;
+    return `• ${it.cant} x ${p.nombre} — ${clp(precioItem(it) * it.cant)}${it.detalle ? `\n   ${it.detalle}` : ""}`;
   });
   const linkWA = texto => CONFIG.whatsapp
     ? `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(texto)}`
@@ -225,7 +288,7 @@
           </div>
         </div>
         <div>
-          <div class="item__precio">${clp(p.precio * it.cant)}</div>
+          <div class="item__precio">${clp(precioItem(it) * it.cant)}</div>
           <button class="item__quitar" data-quitar="${i}">Quitar</button>
         </div>
       </li>`;
@@ -292,7 +355,7 @@
   function pintarResumen() {
     $("#resumenItems").innerHTML = carrito.map(it => {
       const p = porId(it.id);
-      return `<li><span>${it.cant} × ${esc(p.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}</span><b>${clp(p.precio * it.cant)}</b></li>`;
+      return `<li><span>${it.cant} × ${esc(p.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}</span><b>${clp(precioItem(it) * it.cant)}</b></li>`;
     }).join("");
     const esDespacho = pgEntrega() === "despacho";
     $("#pgDireccionBox").hidden = !esDespacho;
@@ -371,7 +434,7 @@
     const pedido = await Servicios.pedidos.crear({
       clienteId: cliente?.id ?? null,
       cliente: { nombre: d.nombre, email: d.email, telefono: d.telefono },
-      items: carrito.map(it => ({ id: it.id, nombre: porId(it.id).nombre, detalle: it.detalle, cant: it.cant, precio: porId(it.id).precio })),
+      items: carrito.map(it => ({ id: it.id, nombre: porId(it.id).nombre, detalle: it.detalle, cant: it.cant, precio: precioItem(it) })),
       entrega: { tipo: pgEntrega(), direccion: d.direccion, fecha: d.fecha },
       subtotal: subtotal(), despacho: pgDespacho(), total: subtotal() + pgDespacho(),
       pago: { metodo: metodo.id, estado: "iniciado" },

@@ -173,12 +173,13 @@ button { font: inherit; cursor: pointer; }
 .producto .btn { padding: 10px 18px; font-size: .9rem; }
 
 /* ---------- Personalizador ---------- */
-.personaliza { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+.personaliza { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+@media (min-width: 981px) { .personaliza__vista { position: sticky; top: 110px; } }
 .personaliza__vista { text-align: center; }
 .personaliza__nota { font-size: .85rem; color: var(--cafe-2); margin-top: 18px; }
 .torta-preview { position: relative; width: min(380px, 100%); aspect-ratio: 1; margin: 0 auto; display: grid; place-items: center; --color: #F27A9B; }
 .torta-preview__plato { position: absolute; inset: 4%; border-radius: 50%; background: radial-gradient(circle, #fff 60%, #f1e6dc 100%); box-shadow: var(--sombra); }
-.torta-preview__torta { position: relative; width: 74%; aspect-ratio: 1; border-radius: 50%; background: #FFF6DC; display: grid; place-items: center; box-shadow: inset 0 -10px 20px rgba(0,0,0,.05); }
+.torta-preview__torta { position: relative; width: 74%; transition: width .35s ease; aspect-ratio: 1; border-radius: 50%; background: #FFF6DC; display: grid; place-items: center; box-shadow: inset 0 -10px 20px rgba(0,0,0,.05); }
 .torta-preview__borde { position: absolute; inset: -4%; border-radius: 50%; }
 .torta-preview__borde i { position: absolute; width: 11%; aspect-ratio: 1; border-radius: 50% 50% 46% 46%; background: var(--color); left: 50%; top: 50%; box-shadow: inset -3px -4px 0 rgba(0,0,0,.08); transition: background .25s; }
 .torta-preview__cara { display: flex; flex-direction: column; align-items: center; color: var(--color); transition: color .25s; }
