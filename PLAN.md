@@ -35,6 +35,29 @@ Instagram, despacho y datos de transferencia también se editan desde el panel �
 - [ ] Permiso de las clientas para mostrar sus mensajes como testimonios.
 - [ ] Dominio (se asumió `mesticha.cl` en canonical, og:url, sitemap y JSON-LD).
 
+## ⏸️ PENDIENTE: decidir hosting (investigado el 02-10-2026)
+
+**GitHub Pages sirve sólo para la demo**: sus condiciones prohíben usarlo para una tienda o negocio.
+Antes de vender de verdad hay que elegir entre:
+
+| | **A. Cloudflare Pages + Supabase gratis** (recomendada) | **B. VPS propio (ej. Contabo) + PocketBase** |
+|---|---|---|
+| Costo mensual | $0 | ~US$4,95 (plan más barato de Contabo) |
+| Mantención | La hace el proveedor | La hace alguien de ustedes (respaldos, actualizaciones, seguridad) |
+| Límite real | 500 MB de base (cientos de miles de pedidos); se pausa tras 7 días sin uso → se evita con una consulta diaria automática gratis | Lo que dé el VPS |
+| Si crece mucho | Supabase Pro US$25/mes (poco probable) | Mismo VPS o uno más grande |
+
+Descartados: **Vercel gratis** (prohíbe uso comercial), **Netlify gratis** (tope ~15 GB de tráfico al mes y la web se apaga al pasarlo),
+**Supabase instalado en VPS** (pide 4–8 GB de RAM), **hosting chileno tradicional** (pensado para WordPress/PHP, innecesario).
+
+Costos que aplican en cualquier opción:
+- Dominio `mesticha.cl` en NIC Chile: **$9.990 al año** (verificar que esté disponible; a nombre y RUT de los dueños).
+- Correo `hola@mesticha.cl`: Cloudflare Email Routing → Gmail, gratis.
+- Pagos: Flow 2,89% + IVA (abono en 3 días hábiles) o Mercado Pago 2,89–3,19% + IVA. Sin mensualidad.
+- Las cuentas (Cloudflare, Supabase, Flow) deben quedar a nombre del negocio, con el usuario como colaborador.
+
+Al decidir, sólo cambia `js/servicios.js`; el resto de la web ya está preparado.
+
 ## Para pasar de demo a tienda real
 
 `js/servicios.js` es la única pieza que cambia; el resto de la página ya llama a `Servicios.*`.
