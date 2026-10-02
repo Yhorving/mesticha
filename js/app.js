@@ -29,8 +29,8 @@
   // ---------- Tienda ----------
   const grid = $("#productos");
   function pintarProductos(filtro = "todos") {
-    const lista = PRODUCTOS.filter(p =>
-      filtro === "todos" || p.categoria === filtro || p.para.includes(filtro));
+    const lista = PRODUCTOS.filter(p => p.activo !== false && (
+      filtro === "todos" || p.categoria === filtro || p.para.includes(filtro)));
     grid.innerHTML = lista.map((p, i) => `
       <article class="producto" style="animation-delay:${i * 50}ms">
         <div class="producto__foto">
@@ -73,6 +73,39 @@
     }
   });
 
+  // ---------- Collage del inicio: fotos que van rotando ----------
+  const slots = $$("[data-hero]").map(fig => ({ fig, fotos: HERO_FOTOS[fig.dataset.hero] || [], i: 0 }));
+  slots.forEach(s => { const img = $("img", s.fig); if (s.fotos[0]) img.style.objectPosition = s.fotos[0].pos; });
+  const sinMovimiento = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let turno = 0;
+
+  function cambiarFoto(s) {
+    if (s.fotos.length < 2) return;
+    s.i = (s.i + 1) % s.fotos.length;
+    const f = s.fotos[s.i];
+    const nueva = new Image();
+    nueva.alt = f.alt;
+    nueva.className = "entrando";
+    nueva.style.objectPosition = f.pos || "";
+    nueva.onload = () => {
+      const viejas = $$("img", s.fig);
+      s.fig.appendChild(nueva);
+      requestAnimationFrame(() => requestAnimationFrame(() => nueva.classList.remove("entrando")));
+      setTimeout(() => viejas.forEach(v => v.remove()), 1300);
+    };
+    nueva.src = f.img;
+  }
+
+  if (!sinMovimiento && slots.length) {
+    // precarga liviana del resto de las fotos después de cargar la página
+    addEventListener("load", () => slots.forEach(s => s.fotos.slice(1).forEach(f => { new Image().src = f.img; })));
+    setInterval(() => {
+      if (document.hidden) return;
+      cambiarFoto(slots[turno % slots.length]);
+      turno++;
+    }, 3500);
+  }
+
   // ---------- Galería y testimonios ----------
   $("#galeriaGrid").innerHTML = GALERIA.map(g => `
     <figure><img src="${g.img}" alt="${esc(g.texto)}" loading="lazy"><figcaption>${esc(g.texto)}</figcaption></figure>`).join("");
@@ -89,7 +122,7 @@
 
   // ---------- Personalizador ----------
   const selTipo = $("#tortaTipo");
-  selTipo.innerHTML = PRODUCTOS.filter(p => p.personalizable)
+  selTipo.innerHTML = PRODUCTOS.filter(p => p.personalizable && p.activo !== false)
     .map(p => `<option value="${p.id}">${esc(p.nombre)} · ${clp(p.precio)}</option>`).join("");
 
   $("#colores").innerHTML = COLORES_DECORACION.map((c, i) => `
@@ -218,6 +251,8 @@
     panel.classList.remove("abierto"); panel.setAttribute("aria-hidden", "true"); velo.hidden = true;
     $$(".modal").forEach(m => m.hidden = true);
     bloquear(false);
+    clearInterval(refresco);
+    volverAlCheckout = false;
   }
   function abrirModal(id) {
     panel.classList.remove("abierto"); velo.hidden = true;
@@ -281,10 +316,13 @@
       $("#pgNombre").value = c.nombre; $("#pgEmail").value = c.email; $("#pgTelefono").value = c.telefono;
       $("#pgOkContacto").checked = c.consentimiento.whatsapp || c.consentimiento.email;
     }
+    $("#pgClaveBox").hidden = !$("#pgCrearCuenta").checked;
     pintarResumen();
     abrirModal("modalPago");
   }
   $("#irAPagar").addEventListener("click", abrirCheckout);
+  $("#pgCrearCuenta").addEventListener("change", e => { $("#pgClaveBox").hidden = !e.target.checked; });
+  $("#pgIrLogin").addEventListener("click", () => { volverAlCheckout = true; abrirCuenta("login"); });
 
   const emailOk = e => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
   const telOk = t => t.replace(/\D/g, "").length >= 8;
@@ -304,14 +342,23 @@
       pgEntrega() === "despacho" && !d.direccion ? "Indica comuna y dirección para el despacho." :
       !d.fecha ? "Elige la fecha en que lo necesitas." :
       d.fecha < $("#pgFecha").min ? `Necesitamos al menos ${CONFIG.diasAnticipacion} días de anticipación.` : "";
-    $("#pgError").textContent = falta; $("#pgError").hidden = !falta;
-    if (falta) return;
+    const creaCuenta = !Servicios.cuenta.actual() && $("#pgCrearCuenta").checked;
+    const clave = $("#pgClave").value;
+    const faltaClave = creaCuenta && clave.length < 6 ? "La contraseña debe tener al menos 6 caracteres." : "";
+    const error = falta || faltaClave;
+    $("#pgError").textContent = error; $("#pgError").hidden = !error;
+    if (error) return;
 
     // Cuenta: crear si lo pidió, o actualizar el consentimiento si ya existe
     const ok = $("#pgOkContacto").checked;
     let cliente = Servicios.cuenta.actual();
-    if (!cliente && $("#pgCrearCuenta").checked) {
-      cliente = await Servicios.cuenta.crear({ ...d, okWhatsapp: ok, okEmail: ok });
+    if (creaCuenta) {
+      try {
+        cliente = await Servicios.cuenta.crear({ ...d, clave, okWhatsapp: ok, okEmail: ok });
+      } catch (err) {
+        $("#pgError").textContent = err.message; $("#pgError").hidden = false;
+        return;
+      }
     } else if (cliente) {
       cliente = await Servicios.cuenta.actualizar({
         telefono: d.telefono,
@@ -366,54 +413,191 @@
     ].join("\n");
     $("#exitoWhatsapp").textContent = pagado ? "Avisar por WhatsApp" : "Enviar comprobante por WhatsApp";
     $("#exitoWhatsapp").href = linkWA(texto);
+    $("#exitoSeguimiento").onclick = () => abrirPedido(pedido.id);
   }
 
   // ---------- Cuenta ----------
-  const fechaCorta = s => { const [a, m, d] = s.slice(0, 10).split("-"); return `${d}-${m}-${a}`; };
+  const fechaLocal = iso => new Date(iso).toLocaleDateString("es-CL");
+  const fechaHora = iso => new Date(iso).toLocaleString("es-CL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const fechaEntrega = f => { const [a, m, d] = f.split("-"); return `${d}-${m}-${a}`; };
+  const primerNombre = n => n.split(" ")[0];
+  let volverAlCheckout = false;
+  let pedidoAbierto = null;
+  let refresco;
+
+  function vistaCuenta(vista) { // "acceso" | "perfil" | "pedido"
+    $("#vistaAcceso").hidden = vista !== "acceso";
+    $("#perfil").hidden = vista !== "perfil";
+    $("#vistaPedido").hidden = vista !== "pedido";
+    if (vista !== "pedido") { clearInterval(refresco); pedidoAbierto = null; }
+    $("#modalCuenta .modal__caja").scrollTop = 0;
+  }
+
+  function mostrarTab(tab) {
+    $$(".tab").forEach(t => t.classList.toggle("activo", t.dataset.tab === tab));
+    $("#formLogin").hidden = tab !== "login";
+    $("#formCuenta").hidden = tab !== "registro";
+    $("#lgError").hidden = true;
+    $("#ctError").hidden = true;
+  }
+  $("#vistaAcceso").addEventListener("click", e => {
+    const t = e.target.closest("[data-tab]");
+    if (t) mostrarTab(t.dataset.tab);
+  });
+
+  function abrirCuenta(tab = "login") {
+    pintarCuenta();
+    if (Servicios.cuenta.actual()) vistaCuenta("perfil");
+    else { vistaCuenta("acceso"); mostrarTab(tab); }
+    abrirModal("modalCuenta");
+  }
+  $("#abrirCuenta").addEventListener("click", () => abrirCuenta());
+
+  function trasAcceso(c, bienvenida) {
+    pintarCuenta();
+    aviso(bienvenida ? `¡Bienvenid@ a MestiCha, ${primerNombre(c.nombre)}! 🐾` : `¡Hola de nuevo, ${primerNombre(c.nombre)}! 🐾`);
+    if (volverAlCheckout) { volverAlCheckout = false; abrirCheckout(); }
+    else vistaCuenta("perfil");
+  }
+
+  function etiquetaEtapa(p) {
+    if (p.etapa === "recibido" && p.pago.metodo === "transferencia") return "⏳ Esperando pago";
+    const e = Servicios.pedidos.etapas[p.etapa];
+    return `${e.icono} ${e.titulo}`;
+  }
 
   function pintarCuenta() {
     const c = Servicios.cuenta.actual();
     $("#abrirCuenta").classList.toggle("activa", !!c);
-    $("#cuentaEtiqueta").textContent = c ? c.nombre.split(" ")[0] : "Mi cuenta";
-    $("#formCuenta").hidden = !!c;
-    $("#perfil").hidden = !c;
+    $("#cuentaEtiqueta").textContent = c ? primerNombre(c.nombre) : "Mi cuenta";
     if (!c) return;
-    $("#pfNombre").textContent = c.nombre.split(" ")[0];
+    $("#pfNombre").textContent = primerNombre(c.nombre);
     $("#pfEmail").textContent = c.email;
     $("#pfTelefono").textContent = c.telefono;
     $("#pfOkWhatsapp").checked = c.consentimiento.whatsapp;
     $("#pfOkEmail").checked = c.consentimiento.email;
     $("#pfMascotas").innerHTML = c.mascotas.length
-      ? c.mascotas.map(m => `<li><span>${m.especie === "gato" ? "🐱" : "🐶"} <b>${esc(m.nombre)}</b></span><small>${m.cumpleanos ? `🎂 ${fechaCorta(m.cumpleanos)}` : "sin fecha"}</small></li>`).join("")
+      ? c.mascotas.map(m => `<li><span>${m.especie === "gato" ? "🐱" : "🐶"} <b>${esc(m.nombre)}</b></span><small>${m.cumpleanos ? `🎂 ${fechaEntrega(m.cumpleanos)}` : "sin fecha de cumpleaños"}</small></li>`).join("")
       : `<li><small>Aún no agregas a tu peludo.</small></li>`;
-    const ps = Servicios.pedidos.delCliente();
+    const ps = Servicios.pedidos.delCliente(c);
     $("#pfPedidos").innerHTML = ps.length
-      ? ps.map(p => `<li><span><b>${p.id}</b> · ${clp(p.total)}<br><small>${fechaCorta(p.creado)} · ${p.items.length} producto${p.items.length > 1 ? "s" : ""}</small></span>
-          <span class="estado${p.pago.estado === "pagado" ? "" : " estado--pendiente"}">${p.pago.estado === "pagado" ? "Pagado" : "Pendiente"}</span></li>`).join("")
-      : `<li><small>Todavía no tienes pedidos.</small></li>`;
+      ? ps.map(p => `
+        <li><button class="pedido-fila" data-pedido="${p.id}">
+          <span><b>${p.id}</b> · ${clp(p.total)}<br><small>Comprado el ${fechaLocal(p.creado)} · para el ${fechaEntrega(p.entrega.fecha)}</small></span>
+          <span class="estado estado--${p.etapa}${p.etapa === "recibido" && p.pago.metodo === "transferencia" ? " estado--espera" : ""}">${etiquetaEtapa(p)}</span>
+          <span class="pedido-fila__flecha" aria-hidden="true">›</span>
+        </button></li>`).join("")
+      : `<li class="vacio"><small>Todavía no tienes pedidos.</small></li>`;
   }
 
-  $("#abrirCuenta").addEventListener("click", () => { pintarCuenta(); abrirModal("modalCuenta"); });
+  // Seguimiento
+  $("#pfPedidos").addEventListener("click", e => {
+    const b = e.target.closest("[data-pedido]");
+    if (b) abrirPedido(b.dataset.pedido);
+  });
 
+  function abrirPedido(id) {
+    vistaCuenta("pedido");
+    pedidoAbierto = id;
+    pintarPedido();
+    $("#volverPerfil").hidden = !Servicios.cuenta.actual();
+    abrirModal("modalCuenta");
+    clearInterval(refresco);
+    refresco = setInterval(pintarPedido, 5000);
+  }
+
+  function pintarPedido() {
+    const p = Servicios.pedidos.obtener(pedidoAbierto);
+    if (!p) return;
+    const E = Servicios.pedidos.etapas;
+    // Cancelado: sólo las etapas que alcanzó + la cancelación
+    const lista = p.etapa === "cancelado" ? p.historial.map(h => h.etapa) : Servicios.pedidos.etapasDe(p);
+    const actual = lista.indexOf(p.etapa);
+    $("#pdId").textContent = p.id;
+    $("#pdSub").textContent = `${p.entrega.tipo === "despacho" ? `🚚 Despacho a ${p.entrega.direccion}` : "🏠 Retiro"} · para el ${fechaEntrega(p.entrega.fecha)}`;
+    $("#pdTimeline").innerHTML = lista.map((et, i) => {
+      const h = p.historial.find(x => x.etapa === et);
+      const estado = i < actual ? "hecho" : i === actual ? "actual" : "pendiente";
+      const esperaPago = et === "confirmado" && i === actual + 1 && p.pago.metodo === "transferencia";
+      return `
+        <li class="tl tl--${estado}${esperaPago ? " tl--espera" : ""}">
+          <span class="tl__punto">${i <= actual ? E[et].icono : esperaPago ? "⏳" : ""}</span>
+          <div class="tl__texto">
+            <b>${E[et].titulo}</b>${h ? `<small>${fechaHora(h.fecha)}</small>` : ""}
+            ${i <= actual ? `<p>${E[et].texto}</p>` : esperaPago ? `<p>${E[et].pendiente}</p>` : ""}
+          </div>
+        </li>`;
+    }).join("");
+    $("#pdItems").innerHTML = p.items.map(it =>
+      `<li><span>${it.cant} × ${esc(it.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}</span><b>${clp(it.precio * it.cant)}</b></li>`).join("")
+      + (p.despacho ? `<li><span>Despacho</span><b>${clp(p.despacho)}</b></li>` : "");
+    $("#pdTotal").textContent = clp(p.total);
+    $("#pdWhatsapp").href = linkWA(`¡Hola MestiCha! 🐾 Quería consultar por mi pedido ${p.id}.`);
+    const fin = p.etapa === "entregado" || p.etapa === "cancelado" || p.manual;
+    $("#pdAvanzar").hidden = !Servicios.pedidos.modoDemo || fin;
+    $("#pdNota").textContent = fin ? "" : Servicios.pedidos.modoDemo
+      ? "🧪 Demo: el pedido avanza solo cada 90 segundos. En la versión real lo actualiza MestiCha y te avisamos por WhatsApp y correo en cada paso."
+      : "Te avisaremos por WhatsApp y correo en cada paso.";
+  }
+  $("#pdAvanzar").addEventListener("click", () => { Servicios.pedidos.avanzar(pedidoAbierto); pintarPedido(); pintarCuenta(); });
+  $("#volverPerfil").addEventListener("click", () => { pintarCuenta(); vistaCuenta("perfil"); });
+
+  // Iniciar sesión
+  $("#formLogin").addEventListener("submit", async e => {
+    e.preventDefault();
+    const email = $("#lgEmail").value.trim(), clave = $("#lgClave").value;
+    const falta = !emailOk(email) ? "Revisa tu correo." : !clave ? "Escribe tu contraseña." : "";
+    $("#lgError").textContent = falta; $("#lgError").hidden = !falta;
+    if (falta) return;
+    try {
+      const c = await Servicios.cuenta.iniciarSesion(email, clave);
+      e.target.reset();
+      trasAcceso(c, false);
+    } catch (err) {
+      $("#lgError").textContent = err.message; $("#lgError").hidden = false;
+    }
+  });
+  $("#olvideClave").addEventListener("click", () =>
+    aviso("En la versión final te llegará un correo para crear una nueva contraseña 📧"));
+
+  // Crear cuenta
   $("#formCuenta").addEventListener("submit", async e => {
     e.preventDefault();
     const d = {
       nombre: $("#ctNombre").value.trim(),
       email: $("#ctEmail").value.trim(),
       telefono: $("#ctTelefono").value.trim(),
+      clave: $("#ctClave").value,
       okWhatsapp: $("#ctOkWhatsapp").checked,
       okEmail: $("#ctOkEmail").checked,
       mascotas: $("#ctMascota").value.trim()
         ? [{ nombre: $("#ctMascota").value.trim(), especie: $("#ctEspecie").value, cumpleanos: $("#ctCumple").value || null }]
         : [],
     };
-    const falta = !d.nombre ? "Escribe tu nombre." : !emailOk(d.email) ? "Revisa tu correo." : !telOk(d.telefono) ? "Revisa tu número de WhatsApp." : "";
+    const falta = !d.nombre ? "Escribe tu nombre." : !emailOk(d.email) ? "Revisa tu correo." :
+      !telOk(d.telefono) ? "Revisa tu número de WhatsApp." :
+      d.clave.length < 6 ? "La contraseña debe tener al menos 6 caracteres." : "";
     $("#ctError").textContent = falta; $("#ctError").hidden = !falta;
     if (falta) return;
-    await Servicios.cuenta.crear(d);
+    try {
+      const c = await Servicios.cuenta.crear(d);
+      e.target.reset();
+      trasAcceso(c, true);
+    } catch (err) {
+      $("#ctError").textContent = err.message; $("#ctError").hidden = false;
+    }
+  });
+
+  // Perfil
+  $("#formMascota").addEventListener("submit", async e => {
+    e.preventDefault();
+    const nombre = $("#mtNombre").value.trim();
+    if (!nombre) { $("#mtNombre").focus(); return; }
+    await Servicios.cuenta.agregarMascota({ nombre, especie: $("#mtEspecie").value, cumpleanos: $("#mtCumple").value || null });
     e.target.reset();
+    e.target.closest("details").open = false;
     pintarCuenta();
-    aviso(`¡Bienvenid@ a MestiCha, ${d.nombre.split(" ")[0]}! 🐾`);
+    aviso(`${nombre} quedó guardad@ 🐾`);
   });
 
   $("#perfil").addEventListener("change", e => {

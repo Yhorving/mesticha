@@ -67,8 +67,62 @@
 .perfil__mascotas, .perfil__pedidos { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .perfil__mascotas li, .perfil__pedidos li { background: var(--blanco); border-radius: var(--radio-s); padding: 10px 14px; font-size: .9rem; display: flex; justify-content: space-between; gap: 10px; }
 .perfil__pedidos small, .perfil__mascotas small { color: var(--cafe-2); }
-.estado { font-size: .75rem; font-weight: 800; padding: 2px 10px; border-radius: 999px; background: #DDF5E6; color: #1E7A43; white-space: nowrap; align-self: center; }
-.estado--pendiente { background: #FFF3C9; color: #8A6A00; }
+.perfil__pedidos li.vacio, .perfil__mascotas li { display: flex; }
+.perfil__pedidos li:not(.vacio) { padding: 0; background: none; }
+.pedido-fila { width: 100%; display: grid; grid-template-columns: 1fr auto 14px; align-items: center; gap: 10px; text-align: left; background: var(--blanco); border: 1.5px solid transparent; border-radius: var(--radio-s); padding: 12px 14px; color: var(--cafe); font-size: .9rem; transition: border-color .15s, transform .15s; }
+.pedido-fila:hover { border-color: var(--rosa-borde); transform: translateX(2px); }
+.pedido-fila small { color: var(--cafe-2); }
+.pedido-fila__flecha { font-size: 1.4rem; color: var(--rosa); line-height: 1; }
+
+/* Etiquetas de etapa */
+.estado { font-size: .75rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; background: #EDE4DC; color: var(--cafe); white-space: nowrap; align-self: center; }
+.estado--confirmado { background: #E3EEFF; color: #2457A6; }
+.estado--preparando { background: var(--rosa-suave); color: var(--rosa-osc); }
+.estado--listo, .estado--en-camino { background: #DDF6F6; color: #187C7B; }
+.estado--entregado { background: #DDF5E6; color: #1E7A43; }
+.estado--espera { background: #FFF3C9; color: #8A6A00; }
+
+/* ---------- Acceso (pestañas) ---------- */
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--crema-2); border-radius: 999px; padding: 4px; margin: 0 44px 22px 0; }
+.tab { border: none; background: transparent; border-radius: 999px; padding: 10px; font-weight: 800; color: var(--cafe-2); transition: all .15s; }
+.tab.activo { background: var(--blanco); color: var(--rosa-osc); box-shadow: var(--sombra-s); }
+.link { border: none; background: none; padding: 0; color: var(--rosa-osc); font-weight: 800; text-decoration: underline; cursor: pointer; }
+.modal__alterno { text-align: center; font-size: .9rem; margin: 14px 0 0; }
+.demo-aviso--abajo { margin: 18px 0 0; text-align: center; }
+.ya-cuenta { font-size: .88rem; margin: 0 0 12px; padding: 8px 14px; background: var(--crema); border-radius: var(--radio-s); }
+
+/* ---------- Agregar mascota ---------- */
+.agregar-mascota { margin-top: 8px; }
+.agregar-mascota summary { cursor: pointer; font-weight: 800; color: var(--rosa-osc); font-size: .9rem; padding: 6px 0; list-style: none; }
+.agregar-mascota summary::-webkit-details-marker { display: none; }
+.agregar-mascota .mascota-fila { grid-template-columns: 1.3fr 1fr 1.2fr auto; margin-top: 6px; }
+.agregar-mascota .btn { padding: 10px 16px; font-size: .88rem; }
+
+/* ---------- Seguimiento del pedido ---------- */
+.btn-volver { border: none; background: none; padding: 0; font-weight: 800; color: var(--rosa-osc); margin-bottom: 10px; }
+.pd-sub { color: var(--cafe-2); font-weight: 700; font-size: .92rem; }
+.timeline { list-style: none; padding: 0; margin: 18px 0 8px; }
+.tl { position: relative; display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding-bottom: 18px; }
+.tl:last-child { padding-bottom: 0; }
+.tl::before { content: ""; position: absolute; left: 19px; top: 40px; bottom: 0; width: 2px; background: #E6D8CC; }
+.tl:last-child::before { display: none; }
+.tl--hecho::before { background: var(--rosa); }
+.tl__punto { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 1.1rem; background: var(--blanco); border: 2px solid #E6D8CC; z-index: 1; }
+.tl--hecho .tl__punto { background: var(--rosa-suave); border-color: var(--rosa); }
+.tl--actual .tl__punto { background: var(--rosa); border-color: var(--rosa); box-shadow: 0 0 0 6px var(--rosa-suave); animation: pulso 2s ease-in-out infinite; }
+.tl--espera .tl__punto { background: #FFF3C9; border-color: #E9C45B; border-style: dashed; }
+@keyframes pulso { 50% { box-shadow: 0 0 0 10px rgba(229, 80, 123, .12); } }
+.tl__texto { padding-top: 8px; }
+.tl__texto b { display: inline-block; margin-right: 8px; }
+.tl__texto small { color: var(--cafe-2); font-size: .78rem; }
+.tl__texto p { margin: 2px 0 0; font-size: .88rem; color: var(--cafe-2); }
+.tl--pendiente .tl__texto b { color: #B5A497; font-weight: 700; }
+.tl--actual .tl__texto b { color: var(--rosa-osc); }
+.pd-detalle { background: var(--blanco); border-radius: var(--radio-s); padding: 4px 18px 6px; margin-top: 20px; }
+.pd-detalle h4 { margin: 14px 0 4px; }
+.pd-acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.pd-acciones .btn--whatsapp { width: auto; flex: 1; }
+.pd-nota { margin-top: 12px; }
 
 /* ---------- WhatsApp flotante ---------- */
 .wa-flotante { position: fixed; right: 20px; bottom: 20px; z-index: 80; display: flex; align-items: center; gap: 10px; height: 60px; padding: 0 15px; border-radius: 999px; background: var(--verde-wa); color: var(--blanco); text-decoration: none; font-weight: 800; box-shadow: 0 10px 25px -8px rgba(37,211,102,.7); transition: transform .2s; }

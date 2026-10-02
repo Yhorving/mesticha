@@ -14,6 +14,9 @@ const CONFIG = {
   diasAnticipacion: 3,          // CONFIRMAR
   costoDespacho: 3500,          // CONFIRMAR (0 = a convenir)
   zonaDespacho: "Santiago",     // CONFIRMAR
+  // Clave del panel admin.html. SÓLO DEMO: está a la vista en el código.
+  // En producción el acceso será con usuario y rol de administrador.
+  adminClave: "mesticha2026",
   // Datos para pago por transferencia. CONFIRMAR todos.
   transferencia: {
     titular: "MestiCha Pet Bakery",
@@ -99,8 +102,33 @@ const PRODUCTOS = [
   },
 ];
 
+// Fotos que van rotando en el collage del inicio (una posición cambia cada pocos segundos).
+// pos = qué parte de la foto se ve (object-position).
+const HERO_FOTOS = {
+  grande: [
+    { img: "img/nicky-comiendo.jpg",  alt: "Dálmata comiendo su torta de cumpleaños para perros con el nombre Nicky", pos: "50% 55%" },
+    { img: "img/cumple-perritas.jpg", alt: "Las perritas de MestiCha frente a su set de cumpleaños con vela, donas y galleta huella", pos: "45% 60%" },
+    { img: "img/cumple-beagle.jpg",   alt: "Beagle y spaniel oliendo pupcake con vela y donas para perros", pos: "50% 55%" },
+    { img: "img/torta-kim-caja.jpg",  alt: "Torta rosada con el nombre Kim en su caja MestiCha", pos: "50% 60%" },
+  ],
+  a: [
+    { img: "img/gato-torta.jpg",   alt: "Gata frente a su torta de cumpleaños para gatos", pos: "50% 70%" },
+    { img: "img/gato-galleta.jpg", alt: "Gato comiendo una galleta MestiCha", pos: "50% 45%" },
+    { img: "img/torta-louie.jpg",  alt: "Torta con hueso de galleta y el nombre Louie", pos: "50% 60%" },
+    { img: "img/perro-galleta-1.jpg", alt: "Perro esperando su galleta", pos: "50% 45%" },
+  ],
+  b: [
+    { img: "img/galletas-packs.jpg",  alt: "Packs de galletas para perros con forma de hueso", pos: "50% 40%" },
+    { img: "img/cumple-set.jpg",      alt: "Set de cumpleaños: pupcake, donas y galleta huella", pos: "50% 60%" },
+    { img: "img/galletas-surtidas.jpg", alt: "Bolsa de galletas surtidas MestiCha", pos: "50% 50%" },
+    { img: "img/pupcake.jpg",         alt: "Pupcake rosado con galleta de inicial", pos: "50% 60%" },
+  ],
+};
+
 const GALERIA = [
+  { img: "img/cumple-perritas.jpg", texto: "Cumple con vela y todo 🎂" },
   { img: "img/nicky-comiendo.jpg",  texto: "Nicky, 12 años de puro amor" },
+  { img: "img/cumple-set.jpg",      texto: "Set de cumpleaños" },
   { img: "img/gato-torta.jpg",      texto: "Los michis también celebran" },
   { img: "img/perro-galleta-1.jpg", texto: "¿Una más?" },
   { img: "img/gato-comiendo.jpg",   texto: "Ni una miga sobró" },
@@ -108,6 +136,7 @@ const GALERIA = [
   { img: "img/gato-galleta.jpg",    texto: "Galleta aprobada" },
   { img: "img/perro-pack.jpg",      texto: "Recién llegado el pedido" },
   { img: "img/perro-galleta-2.jpg", texto: "Sentado y esperando" },
+  { img: "img/cumple-beagle.jpg",   texto: "¿Quién sopla la vela?" },
   { img: "img/torta-kim-caja.jpg",  texto: "Lista para entregar" },
 ];
 

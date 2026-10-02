@@ -117,9 +117,9 @@
       </ul>
     </div>
     <div class="hero__collage">
-      <figure class="foto foto--grande"><img src="img/nicky-comiendo.jpg" width="900" height="1200" fetchpriority="high" alt="Dálmata comiendo su torta de cumpleaños para perros con el nombre Nicky y el número 12"></figure>
-      <figure class="foto foto--chica foto--a"><img src="img/gato-torta.jpg" width="778" height="1200" alt="Gata frente a su torta de cumpleaños para gatos MestiCha"></figure>
-      <figure class="foto foto--chica foto--b"><img src="img/galletas-packs.jpg" width="900" height="1200" alt="Packs de galletas para perros con forma de hueso y la M de MestiCha"></figure>
+      <figure class="foto foto--grande" data-hero="grande"><img src="img/nicky-comiendo.jpg" width="900" height="1200" fetchpriority="high" alt="Dálmata comiendo su torta de cumpleaños para perros con el nombre Nicky y el número 12"></figure>
+      <figure class="foto foto--chica foto--a" data-hero="a"><img src="img/gato-torta.jpg" width="778" height="1200" alt="Gata frente a su torta de cumpleaños para gatos MestiCha"></figure>
+      <figure class="foto foto--chica foto--b" data-hero="b"><img src="img/galletas-packs.jpg" width="900" height="1200" alt="Packs de galletas para perros con forma de hueso y la M de MestiCha"></figure>
       <div class="sticker">
         <img src="img/logo.png" alt="">
       </div>
@@ -395,7 +395,9 @@
               <label class="campo"><span>WhatsApp</span><input id="pgTelefono" type="tel" autocomplete="tel" placeholder="+56 9 1234 5678" required></label>
             </div>
             <div id="pgCrearCuentaBox">
-              <label class="check"><input type="checkbox" id="pgCrearCuenta" checked><span>Crear mi cuenta con estos datos para comprar más rápido la próxima vez</span></label>
+              <p class="ya-cuenta">¿Ya tienes cuenta? <button type="button" class="link" id="pgIrLogin">Inicia sesión</button></p>
+              <label class="check"><input type="checkbox" id="pgCrearCuenta" checked><span>Crear mi cuenta para seguir mi pedido y comprar más rápido la próxima vez</span></label>
+              <label class="campo" id="pgClaveBox"><span>Elige una contraseña</span><input id="pgClave" type="password" autocomplete="new-password" minlength="6" placeholder="Mínimo 6 caracteres"></label>
             </div>
             <label class="check"><input type="checkbox" id="pgOkContacto"><span>Quiero recibir recordatorios (como el cumpleaños de mi peludo) y novedades por WhatsApp y correo</span></label>
           </section>
@@ -440,6 +442,7 @@
       <p id="exitoTexto"></p>
       <div class="transferencia" id="exitoTransferencia" hidden></div>
       <div class="exito__acciones">
+        <button class="btn btn--primario" id="exitoSeguimiento">Ver estado de mi pedido</button>
         <a class="btn btn--whatsapp" id="exitoWhatsapp" target="_blank" rel="noopener">Avisar por WhatsApp</a>
         <button class="btn btn--secundario" data-cerrar>Seguir mirando</button>
       </div>
@@ -448,48 +451,102 @@
 </div>
 
 <!-- ========== CUENTA ========== -->
-<div class="modal" id="modalCuenta" role="dialog" aria-modal="true" aria-labelledby="tituloCuenta" hidden>
+<div class="modal" id="modalCuenta" role="dialog" aria-modal="true" aria-label="Mi cuenta" hidden>
   <div class="modal__caja">
     <button class="cerrar modal__cerrar" data-cerrar aria-label="Cerrar">✕</button>
 
-    <form id="formCuenta" novalidate>
-      <h2 id="tituloCuenta">Crea tu cuenta</h2>
-      <p class="modal__bajada">Guarda tus datos y los de tu peludo. Te avisamos antes de su cumpleaños para que no se quede sin torta 🎂</p>
-      <label class="campo"><span>Tu nombre</span><input id="ctNombre" type="text" autocomplete="name" required></label>
-      <div class="campo-doble campo-doble--igual">
-        <label class="campo"><span>Correo</span><input id="ctEmail" type="email" autocomplete="email" required></label>
-        <label class="campo"><span>WhatsApp</span><input id="ctTelefono" type="tel" autocomplete="tel" placeholder="+56 9 1234 5678" required></label>
+    <!-- Acceso: iniciar sesión / crear cuenta -->
+    <div id="vistaAcceso">
+      <div class="tabs" role="tablist">
+        <button class="tab activo" data-tab="login" role="tab">Iniciar sesión</button>
+        <button class="tab" data-tab="registro" role="tab">Crear cuenta</button>
       </div>
-      <fieldset class="campo">
-        <span>Tu peludo (opcional)</span>
-        <div class="mascota-fila">
-          <input id="ctMascota" type="text" placeholder="Nombre">
-          <select id="ctEspecie"><option value="perro">🐶 Perro</option><option value="gato">🐱 Gato</option></select>
-          <input id="ctCumple" type="date" aria-label="Fecha de cumpleaños">
-        </div>
-      </fieldset>
-      <label class="check"><input type="checkbox" id="ctOkWhatsapp" checked><span>Acepto recibir recordatorios y novedades por <b>WhatsApp</b></span></label>
-      <label class="check"><input type="checkbox" id="ctOkEmail" checked><span>Acepto recibir recordatorios y novedades por <b>correo</b></span></label>
-      <p class="letra-chica">Puedes darte de baja cuando quieras. No compartimos tus datos con nadie.</p>
-      <p class="error" id="ctError" hidden></p>
-      <button class="btn btn--primario btn--ancho" type="submit">Crear cuenta</button>
-      <p class="demo-aviso">🧪 Modo demo: la cuenta se guarda sólo en este navegador.</p>
-    </form>
 
+      <form id="formLogin" novalidate>
+        <h2>¡Hola de nuevo! 🐾</h2>
+        <p class="modal__bajada">Ingresa para ver tus pedidos y en qué etapa van.</p>
+        <label class="campo"><span>Correo</span><input id="lgEmail" type="email" autocomplete="email" required></label>
+        <label class="campo"><span>Contraseña</span><input id="lgClave" type="password" autocomplete="current-password" required></label>
+        <p class="error" id="lgError" hidden></p>
+        <button class="btn btn--primario btn--ancho" type="submit">Iniciar sesión</button>
+        <button class="btn-texto" type="button" id="olvideClave">¿Olvidaste tu contraseña?</button>
+        <p class="modal__alterno">¿No tienes cuenta? <button type="button" class="link" data-tab="registro">Créala aquí</button></p>
+      </form>
+
+      <form id="formCuenta" novalidate hidden>
+        <h2>Crea tu cuenta</h2>
+        <p class="modal__bajada">Sigue tus pedidos y guarda los datos de tu peludo. Te avisamos antes de su cumpleaños para que no se quede sin torta 🎂</p>
+        <label class="campo"><span>Tu nombre</span><input id="ctNombre" type="text" autocomplete="name" required></label>
+        <div class="campo-doble campo-doble--igual">
+          <label class="campo"><span>Correo</span><input id="ctEmail" type="email" autocomplete="email" required></label>
+          <label class="campo"><span>WhatsApp</span><input id="ctTelefono" type="tel" autocomplete="tel" placeholder="+56 9 1234 5678" required></label>
+        </div>
+        <label class="campo"><span>Contraseña</span><input id="ctClave" type="password" autocomplete="new-password" minlength="6" placeholder="Mínimo 6 caracteres" required></label>
+        <fieldset class="campo">
+          <span>Tu peludo (opcional)</span>
+          <div class="mascota-fila">
+            <input id="ctMascota" type="text" placeholder="Nombre">
+            <select id="ctEspecie"><option value="perro">🐶 Perro</option><option value="gato">🐱 Gato</option></select>
+            <input id="ctCumple" type="date" aria-label="Fecha de cumpleaños">
+          </div>
+        </fieldset>
+        <label class="check"><input type="checkbox" id="ctOkWhatsapp" checked><span>Acepto recibir recordatorios y novedades por <b>WhatsApp</b></span></label>
+        <label class="check"><input type="checkbox" id="ctOkEmail" checked><span>Acepto recibir recordatorios y novedades por <b>correo</b></span></label>
+        <p class="letra-chica">Puedes darte de baja cuando quieras. No compartimos tus datos con nadie.</p>
+        <p class="error" id="ctError" hidden></p>
+        <button class="btn btn--primario btn--ancho" type="submit">Crear cuenta</button>
+        <p class="modal__alterno">¿Ya tienes cuenta? <button type="button" class="link" data-tab="login">Inicia sesión</button></p>
+      </form>
+      <p class="demo-aviso demo-aviso--abajo">🧪 Modo demo: las cuentas se guardan sólo en este navegador.</p>
+    </div>
+
+    <!-- Perfil -->
     <div id="perfil" hidden>
       <h2>Hola, <span id="pfNombre"></span> 👋</h2>
+
+      <h4>Mis pedidos</h4>
+      <ul class="perfil__pedidos" id="pfPedidos"></ul>
+
+      <h4>Mis peludos</h4>
+      <ul class="perfil__mascotas" id="pfMascotas"></ul>
+      <details class="agregar-mascota">
+        <summary>＋ Agregar peludo</summary>
+        <form id="formMascota" class="mascota-fila" novalidate>
+          <input id="mtNombre" type="text" placeholder="Nombre" required>
+          <select id="mtEspecie"><option value="perro">🐶 Perro</option><option value="gato">🐱 Gato</option></select>
+          <input id="mtCumple" type="date" aria-label="Fecha de cumpleaños">
+          <button class="btn btn--primario" type="submit">Guardar</button>
+        </form>
+      </details>
+
+      <h4>Mis datos</h4>
       <div class="perfil__datos">
         <div><small>Correo</small><b id="pfEmail"></b></div>
         <div><small>WhatsApp</small><b id="pfTelefono"></b></div>
       </div>
-      <h4>Mis peludos</h4>
-      <ul class="perfil__mascotas" id="pfMascotas"></ul>
+
       <h4>Avisos</h4>
-      <label class="check"><input type="checkbox" id="pfOkWhatsapp"><span>Recordatorios por WhatsApp</span></label>
-      <label class="check"><input type="checkbox" id="pfOkEmail"><span>Recordatorios por correo</span></label>
-      <h4>Mis pedidos</h4>
-      <ul class="perfil__pedidos" id="pfPedidos"></ul>
+      <label class="check"><input type="checkbox" id="pfOkWhatsapp"><span>Recordatorios y estado de pedidos por WhatsApp</span></label>
+      <label class="check"><input type="checkbox" id="pfOkEmail"><span>Recordatorios y estado de pedidos por correo</span></label>
       <button class="btn-texto" id="cerrarSesion">Cerrar sesión</button>
+    </div>
+
+    <!-- Seguimiento de un pedido -->
+    <div id="vistaPedido" hidden>
+      <button class="btn-volver" id="volverPerfil">← Mis pedidos</button>
+      <h2>Pedido <span id="pdId"></span></h2>
+      <p class="pd-sub" id="pdSub"></p>
+      <ol class="timeline" id="pdTimeline"></ol>
+      <div class="pd-detalle">
+        <h4>Detalle</h4>
+        <ul class="resumen__items" id="pdItems"></ul>
+        <div class="carrito__linea carrito__linea--total"><span>Total</span><span id="pdTotal"></span></div>
+      </div>
+      <div class="pd-acciones">
+        <a class="btn btn--whatsapp" id="pdWhatsapp" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+        <button class="btn btn--secundario" id="pdAvanzar" hidden>Avanzar estado (demo)</button>
+      </div>
+      <p class="letra-chica pd-nota" id="pdNota"></p>
     </div>
   </div>
 </div>

@@ -10,7 +10,10 @@ Se abre con doble clic en `index.html`; no necesita instalar nada.
 | Landing (hero, tienda, arma su torta, cómo pedir, galería, testimonios, nosotros, FAQ) | ✅ con fotos reales |
 | Carrito | ✅ se guarda en el navegador |
 | Checkout + pago (Webpay / Mercado Pago / transferencia) | 🧪 **demo**: el pago se simula |
-| Cuentas de clientes (nombre, correo, WhatsApp, mascota + cumpleaños, consentimiento) | 🧪 **demo**: se guardan sólo en el navegador |
+| Cuentas de clientes: crear cuenta, iniciar/cerrar sesión, mascotas con cumpleaños, consentimiento | 🧪 **demo**: se guardan sólo en el navegador |
+| Historial de pedidos y seguimiento (recibido → pago → preparando → en camino/listo → entregado) | 🧪 **demo**: avanza solo cada 90 s |
+| Panel `admin.html`: dashboard, pedidos (cambiar etapa, cancelar, avisar por WhatsApp), clientes (exportar CSV), productos (crear, editar, ocultar, eliminar, subir foto) | 🧪 **demo**: clave `mesticha2026`, datos del navegador |
+| Collage del inicio con fotos que van rotando | ✅ (fotos en `HERO_FOTOS` de `js/datos.js`) |
 | Botón flotante de WhatsApp | ✅ (falta el número, ver abajo) |
 | SEO: título/descripción, Open Graph, JSON-LD `Bakery`, sitemap, robots | ✅ (falta dominio definitivo) |
 
@@ -41,6 +44,11 @@ Todo está en `js/datos.js` (y marcado con `CONFIRMAR` en el código):
    Se integra con una función serverless (`/api/pagos`) + webhook que marca el pedido como pagado.
    Las llaves secretas van en el servidor, nunca en el navegador.
 4. **Avisos al negocio**: correo/WhatsApp a MestiCha por cada pedido nuevo.
+5. **Panel admin real**: login con usuario y rol "admin" en Supabase (hoy es una clave de demo
+   visible en el código). Las fotos de productos van a Supabase Storage. Cada cambio de etapa
+   dispara el aviso automático al cliente.
+6. **Importante en la demo**: como todo vive en el navegador, el panel sólo ve los pedidos
+   hechos en ese mismo navegador. Con el backend, todos los pedidos llegan al panel.
 
 ## Bot de recordatorios (v2)
 

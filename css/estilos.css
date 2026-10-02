@@ -113,7 +113,8 @@ button { font: inherit; cursor: pointer; }
 
 .hero__collage { position: relative; aspect-ratio: 1 / 1.02; }
 .foto { margin: 0; position: absolute; border-radius: var(--radio); overflow: hidden; box-shadow: var(--sombra); border: 6px solid var(--blanco); }
-.foto img { width: 100%; height: 100%; object-fit: cover; }
+.foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 1.2s ease, transform 6s ease-out; }
+.foto img.entrando { opacity: 0; transform: scale(1.06); }
 .foto--grande { inset: 0 18% 8% 0; transform: rotate(-2deg); }
 .foto--chica { width: 40%; aspect-ratio: 3/4; }
 .foto--a { right: 0; top: 6%; transform: rotate(4deg); }
@@ -188,15 +189,15 @@ button { font: inherit; cursor: pointer; }
 .personaliza__form { background: var(--blanco); border-radius: var(--radio); padding: 36px; box-shadow: var(--sombra); }
 .campo { display: flex; flex-direction: column; gap: 6px; margin: 0 0 18px; border: none; padding: 0; min-width: 0; }
 .campo > span { font-weight: 800; font-size: .9rem; }
-.campo input, .campo select {
+.campo input:not([type=radio]):not([type=checkbox]), .campo select {
   width: 100%; padding: 12px 14px; border-radius: var(--radio-s); border: 1.5px solid #EADBD0;
   background: var(--crema); font: inherit; color: var(--cafe);
 }
 .campo input:focus, .campo select:focus { outline: none; border-color: var(--rosa); box-shadow: 0 0 0 3px var(--rosa-suave); }
 .campo-doble { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
 .opciones { display: flex; gap: 10px; }
-.opcion { flex: 1; }
-.opcion input { position: absolute; opacity: 0; }
+.opcion { flex: 1; position: relative; }
+.opcion input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .opcion span { display: block; text-align: center; padding: 11px; border-radius: var(--radio-s); border: 1.5px solid #EADBD0; font-weight: 700; cursor: pointer; transition: all .15s; }
 .opcion input:checked + span { border-color: var(--rosa); background: var(--rosa-suave); color: var(--rosa-osc); }
 .opcion input:focus-visible + span { box-shadow: 0 0 0 3px var(--rosa-borde); }
@@ -284,10 +285,11 @@ button { font: inherit; cursor: pointer; }
 @keyframes fade { from { opacity: 0; } }
 .carrito {
   position: fixed; top: 0; right: 0; bottom: 0; z-index: 100; width: min(420px, 100%);
-  background: var(--crema); display: flex; flex-direction: column;
-  transform: translateX(100%); visibility: hidden; transition: transform .3s ease, visibility 0s .3s; box-shadow: -10px 0 40px rgba(0,0,0,.15);
+  background: var(--crema); display: none; flex-direction: column; box-shadow: -10px 0 40px rgba(0,0,0,.15);
 }
-.carrito.abierto { transform: none; visibility: visible; transition: transform .3s ease; }
+/* Cerrado con display:none: si se corre fuera de pantalla, en móvil ensancha la página */
+.carrito.abierto { display: flex; animation: deslizar .3s ease; }
+@keyframes deslizar { from { transform: translateX(100%); } }
 .carrito__cabecera { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #EADBD0; }
 .carrito__cabecera h3 { margin: 0; font-size: 1.4rem; }
 .cerrar { border: none; background: var(--blanco); width: 38px; height: 38px; border-radius: 50%; font-size: 1rem; box-shadow: var(--sombra-s); flex: none; }
