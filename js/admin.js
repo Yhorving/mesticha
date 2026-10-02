@@ -291,7 +291,7 @@
       + (p.nota ? `<br>📝 <i>${esc(p.nota)}</i>` : "");
     $("#mpAvisar").hidden = !p.cliente.telefono;
     pintarEnvio(p);
-    $("#mpItems").innerHTML = p.items.map(it => `<li><span>${it.cant} × ${esc(it.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}</span><b>${clp(it.precio * it.cant)}</b></li>`).join("")
+    $("#mpItems").innerHTML = p.items.map(it => `<li><span>${it.cant} × ${esc(it.nombre)}${it.detalle ? `<small>${esc(it.detalle)}</small>` : ""}${it.precioLista ? `<small class="con-dcto">🏷️ con descuento</small>` : ""}</span><b>${it.precioLista ? `<s>${clp(it.precioLista * it.cant)}</s> ` : ""}${clp(it.precio * it.cant)}</b></li>`).join("")
       + (p.despacho ? `<li><span>Despacho</span><b>${clp(p.despacho)}</b></li>` : "");
     $("#mpTotal").textContent = clp(p.total);
     $("#mpPago").textContent = `Pago: ${METODOS[p.pago.metodo] || p.pago.metodo} · ${p.pago.estado === "pagado" ? "pagado ✔" : "pendiente"}`;
@@ -389,9 +389,9 @@
   const precioSugerido = f => {
     const p = S.productos.lista().find(x => x.id === f.id);
     if (!p) return 0;
-    if (!p.personalizable) return p.precio;
+    if (!p.personalizable) return S.productos.precio(p);
     const t = OPCIONES_TORTA.tamanos.find(x => x.id === f.tamano), d = OPCIONES_TORTA.decoraciones.find(x => x.id === f.deco);
-    return t.precio + d.extra;
+    return S.productos.precio(p, t.precio + d.extra);
   };
   const precioFila = f => f.precio ?? precioSugerido(f);
 
@@ -574,6 +574,28 @@
   // ======================= PRODUCTOS =======================
   const CATEGORIAS = { tortas: "Tortas", pupcakes: "Pupcakes", galletas: "Galletas" };
 
+  // Precio en la tarjeta del panel: "Antes $X · Ahora $Y" si tiene descuento vigente
+  function precioPanel(p) {
+    const lista = p.personalizable ? desdeTorta() : p.precio, final = S.productos.precio(p, lista);
+    const desde = p.personalizable ? "<small>desde</small> " : "";
+    const hasta = p.descuentoHasta && S.productos.descuento(p) ? `<small class="aprod__hasta">hasta el ${fechaCorta(p.descuentoHasta)}</small>` : "";
+    const vencida = p.descuento && !S.productos.descuento(p) ? `<small class="aprod__hasta">promo terminada</small>` : "";
+    return final < lista ? `${desde}<s>${clp(lista)}</s> <span class="aprod__ahora">${clp(final)}</span>${hasta}` : `${desde}${clp(lista)}${vencida}`;
+  }
+  // Vista previa en el formulario mientras se escribe el %
+  function vistaPromo() {
+    const pctv = Math.round(+$("#prDescuento").value || 0);
+    const pers = $("#prPersonalizable").checked;
+    const base = pers ? desdeTorta() : Math.round(+$("#prPrecio").value || 0);
+    const hasta = $("#prDescuentoHasta").value;
+    $("#prPromoVista").innerHTML = pctv > 0 && pctv <= 90 && base
+      ? `En la tienda: <b>Antes <s>${clp(base)}</s> · Ahora ${clp(Math.round(base * (1 - pctv / 100) / 10) * 10)}</b>${pers ? " (y el mismo % en cada tamaño)" : ""}${hasta ? ` hasta el ${fechaCorta(hasta)}` : ""}.`
+      : "Sin descuento.";
+  }
+  ["#prDescuento", "#prDescuentoHasta", "#prPrecio", "#prPersonalizable"].forEach(sel => $(sel).addEventListener("input", vistaPromo));
+  $("#prPersonalizable").addEventListener("change", vistaPromo);
+  $("#formProducto").addEventListener("input", () => { $("#prError").hidden = true; });
+
   function pintarProductos() {
     $("#gridProductos").innerHTML = S.productos.lista().map(p => `
       <article class="aprod${p.activo === false ? " inactivo" : ""}${p.agotado ? " agotado" : ""}">
@@ -581,11 +603,12 @@
           ${p.img ? `<img src="${esc(p.img)}" alt="">` : ""}
           <span class="aprod__estado">${p.activo === false ? "🙈 Oculto" : p.agotado ? "🚫 Agotado" : "👁 Visible"}</span>
           ${fotosDe(p).length > 1 ? `<span class="aprod__nfotos">📷 ${fotosDe(p).length}</span>` : ""}
+          ${S.productos.descuento(p) ? `<span class="aprod__dcto">-${S.productos.descuento(p)}%</span>` : ""}
         </div>
         <div class="aprod__cuerpo">
           <h4>${esc(p.nombre)}</h4>
           <div class="aprod__meta">${CATEGORIAS[p.categoria] || p.categoria} · ${p.para.map(x => x === "perro" ? "🐶" : "🐱").join(" ")}${p.personalizable ? " · personalizable" : ""}${p.etiqueta ? ` · “${esc(p.etiqueta)}”` : ""}</div>
-          <div class="aprod__precio">${p.personalizable ? `<small>desde</small> ${clp(desdeTorta())}` : clp(p.precio)}</div>
+          <div class="aprod__precio">${precioPanel(p)}</div>
           <div class="aprod__acciones">
             <button data-editar="${p.id}">✏️ Editar</button>
             <button data-agotado="${p.id}" class="${p.agotado ? "stock" : ""}">${p.agotado ? "✅ Hay stock" : "🚫 Agotado"}</button>
@@ -653,6 +676,8 @@
     $("#prPrecio").value = p?.precio ?? "";
     $("#prDescripcion").value = p?.descripcion || "";
     $("#prEtiqueta").value = p?.etiqueta || "";
+    $("#prDescuento").value = p?.descuento || "";
+    $("#prDescuentoHasta").value = p?.descuentoHasta || "";
     $("#prPerro").checked = p ? p.para.includes("perro") : true;
     $("#prGato").checked = p ? p.para.includes("gato") : false;
     $("#prPersonalizable").checked = !!p?.personalizable;
@@ -660,7 +685,7 @@
     $("#prAgotado").checked = !!p?.agotado;
     $("#prFoto").value = "";
     $("#prError").hidden = true;
-    pintarFotos(); modoPrecio();
+    pintarFotos(); modoPrecio(); vistaPromo();
     abrirModal("mProducto");
     setTimeout(() => $("#prNombre").focus(), 50);
   }
@@ -722,6 +747,8 @@
       precio: $("#prPersonalizable").checked ? desdeTorta() : Math.round(+$("#prPrecio").value),
       descripcion: $("#prDescripcion").value.trim(),
       etiqueta: $("#prEtiqueta").value.trim() || undefined,
+      descuento: Math.round(+$("#prDescuento").value || 0) || undefined,
+      descuentoHasta: $("#prDescuento").value > 0 && $("#prDescuentoHasta").value || undefined,
       para,
       personalizable: $("#prPersonalizable").checked,
       activo: $("#prActivo").checked,
@@ -730,6 +757,8 @@
       imgs: fotos.slice(),
     };
     const falta = !d.nombre ? "Escribe el nombre." : !(d.precio > 0) ? "Indica un precio mayor a 0." :
+      d.descuento && (d.descuento < 1 || d.descuento > 90) ? "El descuento debe ser entre 1% y 90%." :
+      d.descuentoHasta && d.descuentoHasta < isoLocal(new Date()) ? "La fecha de término de la promo ya pasó." :
       !para.length ? "Marca si es para perros, gatos o ambos." : !fotos.length ? "Sube al menos una foto del producto." : "";
     $("#prError").textContent = falta; $("#prError").hidden = !falta;
     if (falta) return;

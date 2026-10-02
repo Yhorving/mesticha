@@ -258,8 +258,22 @@ const Servicios = (() => {
   if (guardados) PRODUCTOS.splice(0, PRODUCTOS.length, ...guardados);
   else PRODUCTOS.forEach(p => { if (p.activo === undefined) p.activo = true; });
 
+  // Descuento vigente de un producto (en %): { descuento: 20, descuentoHasta: "2026-10-31" (opcional) }
+  const hoyLocal = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+  function descuentoDe(p) {
+    const d = Math.round(+p?.descuento || 0);
+    if (d <= 0 || d >= 100) return 0;
+    if (p.descuentoHasta && hoyLocal() > p.descuentoHasta) return 0; // la promo ya terminó
+    return d;
+  }
+  // Precio con descuento, redondeado a la decena (como se cobra en Chile)
+  const conDescuento = (precio, pct) => pct ? Math.round(precio * (1 - pct / 100) / 10) * 10 : precio;
+
   const productos = {
     lista: () => PRODUCTOS,
+    descuento: descuentoDe,
+    // base: precio de lista (para la torta, tamaño + decoración)
+    precio: (p, base = p.precio) => conDescuento(base, descuentoDe(p)),
     // Lanza error si no hay espacio (fotos pesadas en la demo) y deja todo como estaba
     guardar(prod) {
       const antes = PRODUCTOS.slice();

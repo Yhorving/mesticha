@@ -405,6 +405,14 @@
             <p class="letra-chica prod-nota" id="prPrecioNota" hidden>💡 El precio de la torta personalizada sale de los tamaños y decoraciones (<code>OPCIONES_TORTA</code> en <code>js/datos.js</code>).</p>
           </div>
           <label class="campo"><span>Descripción</span><textarea id="prDescripcion" rows="3" maxlength="220"></textarea></label>
+          <fieldset class="campo prod-promo">
+            <span>🏷️ Promoción <small>(opcional)</small></span>
+            <div class="prod-promo__fila">
+              <label class="prod-promo__pct"><input id="prDescuento" type="number" min="0" max="90" step="1" placeholder="0"><b>% dcto.</b></label>
+              <label class="prod-promo__hasta"><small>Hasta</small><input id="prDescuentoHasta" type="date" aria-label="Promoción válida hasta"></label>
+            </div>
+            <p class="letra-chica" id="prPromoVista">Sin descuento.</p>
+          </fieldset>
           <div class="campo-doble campo-doble--igual">
             <label class="campo"><span>Etiqueta (opcional)</span><input id="prEtiqueta" type="text" maxlength="16" placeholder="Ej: Nuevo"></label>
             <fieldset class="campo"><span>Apto para</span>

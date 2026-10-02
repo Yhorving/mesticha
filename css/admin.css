@@ -257,3 +257,18 @@
 .form-entrega input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #E6D8CC; background: var(--crema); font: inherit; color: var(--cafe); }
 .fe-usar { display: block; margin: -4px 0 10px; text-align: left; overflow-wrap: anywhere; }
 .form-entrega__botones { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- Promociones en productos ---------- */
+.aprod__dcto { position: absolute; left: 10px; bottom: 10px; background: #D7263D; color: var(--blanco); font-size: .8rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+.aprod__precio s { color: var(--cafe-2); font-weight: 600; font-size: .9rem; }
+.aprod__ahora { color: #D7263D; }
+.aprod__hasta { display: block; font-size: .75rem; color: var(--cafe-2); font-weight: 700; }
+.prod-promo { background: #FFF5F6; border: 1px dashed #F3B6BF; border-radius: var(--radio-s); padding: 12px 14px; }
+.prod-promo__fila { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.prod-promo__pct { display: flex; align-items: center; gap: 8px; }
+.prod-promo__pct input { width: 90px; text-align: center; font-weight: 800; }
+.prod-promo__hasta { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px; }
+.prod-promo input { padding: 10px 12px; border-radius: 10px; border: 1.5px solid #E6D8CC; background: var(--blanco); font: inherit; color: var(--cafe); }
+.prod-promo .letra-chica { margin: 8px 0 0; }
+.con-dcto { color: #B01E32 !important; }
+.prod-promo__pct b { white-space: nowrap; }

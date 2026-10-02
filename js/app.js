@@ -31,7 +31,13 @@
   // ---------- Tienda ----------
   const grid = $("#productos");
   const fotosDe = p => (p.imgs && p.imgs.length ? p.imgs : [p.img]).filter(Boolean);
-  const desde = p => p.personalizable ? Math.min(...OPCIONES_TORTA.tamanos.map(t => t.precio)) : p.precio;
+  const listaDe = p => p.personalizable ? Math.min(...OPCIONES_TORTA.tamanos.map(t => t.precio)) : p.precio;
+  const pct = p => Servicios.productos.descuento(p);
+  const desde = p => Servicios.productos.precio(p, listaDe(p));
+  // "Antes $X · Ahora $Y" cuando hay descuento
+  const precioHTML = (p, lista, final, prefijo = "") => pct(p)
+    ? `<span class="precio precio--oferta"><small>${prefijo}Antes <s>${clp(lista)}</s></small><span class="precio__ahora">Ahora ${clp(final)}</span></span>`
+    : `<span class="precio">${prefijo ? `<small>${prefijo.trim()}</small>` : ""}${clp(final)}</span>`;
 
   function fotoProducto(p) {
     const fotos = fotosDe(p);
@@ -46,13 +52,15 @@
   }
 
   function pintarProductos(filtro = "todos") {
+    $("#filtroOfertas").hidden = !PRODUCTOS.some(p => p.activo !== false && pct(p));
     const lista = PRODUCTOS.filter(p => p.activo !== false && (
-      filtro === "todos" || p.categoria === filtro || p.para.includes(filtro)));
+      filtro === "todos" || (filtro === "ofertas" ? pct(p) > 0 : p.categoria === filtro || p.para.includes(filtro))));
     grid.innerHTML = lista.map((p, i) => `
       <article class="producto${p.agotado ? " producto--agotado" : ""}" style="animation-delay:${i * 50}ms">
         <div class="producto__foto">
           ${fotoProducto(p)}
           ${p.agotado ? `<span class="producto__etiqueta producto__etiqueta--agotado">Agotado</span>`
+            : pct(p) ? `<span class="producto__etiqueta producto__etiqueta--oferta">-${pct(p)}%</span>`
             : p.etiqueta ? `<span class="producto__etiqueta">${esc(p.etiqueta)}</span>` : ""}
           <span class="producto__para" title="Apto para">${p.para.map(x => x === "perro" ? "🐶" : "🐱").join(" ")}</span>
         </div>
@@ -60,7 +68,7 @@
           <h3>${esc(p.nombre)}</h3>
           <p>${esc(p.descripcion)}</p>
           <div class="producto__pie">
-            <span class="precio">${p.personalizable ? "<small>desde</small>" : ""}${clp(desde(p))}</span>
+            ${precioHTML(p, listaDe(p), desde(p), p.personalizable ? "desde · " : "")}
             ${p.agotado
               ? `<button class="btn btn--agotado" disabled>Agotado</button>`
               : p.personalizable
@@ -197,7 +205,8 @@
     const deco = decoraciones.find(d => d.id === valor("decoracion"));
     return {
       tamano, deco,
-      precio: tamano.precio + deco.extra,
+      lista: tamano.precio + deco.extra,
+      precio: TORTA() ? Servicios.productos.precio(TORTA(), tamano.precio + deco.extra) : tamano.precio + deco.extra,
       nombre: $("#tortaNombre").value.trim(),
       edad: $("#tortaEdad").value.trim(),
       especie: valor("especie"),
@@ -214,8 +223,12 @@
     $("#previewNombre").textContent = d.nombre || "Tu peludo";
     $("#previewEdad").textContent = d.edad || "";
     $("#previewIcono").textContent = d.deco.icono;
-    $("#tortaPrecio").textContent = clp(d.precio);
-    $("#tortaDesglose").textContent = `${d.tamano.nombre} ${clp(d.tamano.precio)}${d.deco.extra ? ` + ${d.deco.nombre.toLowerCase()} ${clp(d.deco.extra)}` : ""}`;
+    const promo = TORTA() ? pct(TORTA()) : 0;
+    $("#tortaPrecio").innerHTML = promo
+      ? `<small class="precio__antes">Antes <s>${clp(d.lista)}</s></small>Ahora ${clp(d.precio)}`
+      : clp(d.precio);
+    $("#tortaPrecio").classList.toggle("personaliza__precio--oferta", !!promo);
+    $("#tortaDesglose").textContent = `${d.tamano.nombre} ${clp(d.tamano.precio)}${d.deco.extra ? ` + ${d.deco.nombre.toLowerCase()} ${clp(d.deco.extra)}` : ""}${promo ? ` · 🏷️ ${promo}% de descuento` : ""}`;
     if (ultimaDeco !== d.deco.id) {
       ultimaDeco = d.deco.id;
       const img = $("#ejemploImg");
@@ -244,7 +257,7 @@
       `Color ${d.color.nombre.toLowerCase()}`,
       d.nota && `Nota: ${d.nota}`,
     ].filter(Boolean).join(" · ");
-    agregar({ id: torta.id, detalle, precio: d.precio });
+    agregar({ id: torta.id, detalle, precio: d.precio, precioLista: d.lista });
     e.target.reset();
     actualizarPreview();
   });
@@ -256,18 +269,19 @@
   carrito = carrito.filter(it => porId(it.id));
   const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(carrito)); } catch {} };
 
-  function agregar({ id, detalle = "", precio }) {
+  function agregar({ id, detalle = "", precio, precioLista }) {
     if (porId(id)?.agotado) { aviso(`${porId(id).nombre} está agotado por ahora`); return; }
     const existente = carrito.find(it => it.id === id && it.detalle === detalle);
     if (existente) existente.cant++;
-    else carrito.push({ id, detalle, cant: 1, ...(precio ? { precio } : {}) });
+    else carrito.push({ id, detalle, cant: 1, ...(precio ? { precio } : {}), ...(precioLista > precio ? { precioLista } : {}) });
     guardar(); pintarCarrito();
     const n = $("#contadorCarrito");
     n.classList.remove("pop"); void n.offsetWidth; n.classList.add("pop");
     aviso(`${porId(id).nombre} agregado al carrito 🐾`);
   }
 
-  const precioItem = it => it.precio ?? porId(it.id).precio;
+  const precioItem = it => it.precio ?? Servicios.productos.precio(porId(it.id));
+  const listaItem = it => it.precioLista ?? porId(it.id).precio;
   const subtotal = () => carrito.reduce((s, it) => s + precioItem(it) * it.cant, 0);
   const textoItems = () => carrito.map(it => {
     const p = porId(it.id);
@@ -298,7 +312,7 @@
           </div>
         </div>
         <div>
-          <div class="item__precio">${clp(precioItem(it) * it.cant)}</div>
+          <div class="item__precio">${listaItem(it) > precioItem(it) ? `<s>${clp(listaItem(it) * it.cant)}</s>` : ""}${clp(precioItem(it) * it.cant)}</div>
           <button class="item__quitar" data-quitar="${i}">Quitar</button>
         </div>
       </li>`;
@@ -450,7 +464,7 @@
     const pedido = await Servicios.pedidos.crear({
       clienteId: cliente?.id ?? null,
       cliente: { nombre: d.nombre, email: d.email, telefono: d.telefono },
-      items: carrito.map(it => ({ id: it.id, nombre: porId(it.id).nombre, detalle: it.detalle, cant: it.cant, precio: precioItem(it) })),
+      items: carrito.map(it => ({ id: it.id, nombre: porId(it.id).nombre, detalle: it.detalle, cant: it.cant, precio: precioItem(it), ...(listaItem(it) > precioItem(it) ? { precioLista: listaItem(it) } : {}) })),
       entrega: { tipo: pgEntrega(), direccion: d.direccion, fecha: d.fecha },
       subtotal: subtotal(), despacho: pgDespacho(), total: subtotal() + pgDespacho(),
       pago: { metodo: metodo.id, estado: "iniciado" },

@@ -12,7 +12,7 @@ Se abre con doble clic en `index.html`; no necesita instalar nada.
 | Checkout + pago (Webpay / Mercado Pago / transferencia) | 🧪 **demo**: el pago se simula |
 | Cuentas de clientes: crear cuenta, iniciar/cerrar sesión, mascotas con cumpleaños, consentimiento | 🧪 **demo**: se guardan sólo en el navegador |
 | Historial de pedidos y seguimiento (recibido → pago → preparando → en camino/listo → entregado) | 🧪 **demo**: avanza solo cada 90 s |
-| Panel `admin.html`: dashboard, pedidos (ingresar a mano, cambiar etapa, cancelar, avisar por WhatsApp), clientes (exportar CSV), productos (crear, editar, varias fotos, marcar agotado, ocultar, eliminar) | 🧪 **demo**: clave `mesticha2026`, datos del navegador |
+| Panel `admin.html`: dashboard, pedidos (ingresar a mano, cambiar etapa, cancelar, avisar por WhatsApp), clientes (exportar CSV), productos (crear, editar, varias fotos, promociones con % y fecha, marcar agotado, ocultar, eliminar) | 🧪 **demo**: clave `mesticha2026`, datos del navegador |
 | Collage del inicio con fotos que van rotando | ✅ (fotos en `HERO_FOTOS` de `js/datos.js`) |
 | Una sola "Torta personalizada" con carrusel de fotos; tamaño y decoración se eligen en "Arma su torta" | ✅ (opciones y precios en `OPCIONES_TORTA` de `js/datos.js`) |
 | Botón flotante de WhatsApp | ✅ (falta el número, ver abajo) |

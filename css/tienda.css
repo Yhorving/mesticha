@@ -224,3 +224,15 @@ body.bloqueado .wa-flotante { display: none; }
   .direccion-campos { grid-template-columns: 1fr; }
   .perfil__editar-botones .btn { flex: 1; }
 }
+
+/* ---------- Ofertas / descuentos ---------- */
+.producto__etiqueta--oferta { background: #D7263D; font-size: .85rem; padding: 5px 12px; }
+.precio--oferta { display: flex; flex-direction: column; line-height: 1.15; }
+.precio--oferta small { font-family: var(--f-texto); font-size: .78rem; color: var(--cafe-2); font-weight: 700; }
+.precio--oferta small s { color: var(--cafe-2); }
+.precio__ahora { color: #D7263D; }
+.filtro--oferta { border-color: #F3B6BF; color: #B01E32; }
+.filtro--oferta.activo { background: #D7263D; border-color: #D7263D; color: var(--blanco); }
+.personaliza__precio--oferta { color: #D7263D; line-height: 1.1; }
+.precio__antes { display: block; font-family: var(--f-texto); font-size: .8rem; color: var(--cafe-2); font-weight: 700; }
+.item__precio s { display: block; font-size: .78rem; color: var(--cafe-2); font-weight: 600; }
